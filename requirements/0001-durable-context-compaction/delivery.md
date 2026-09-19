@@ -273,12 +273,16 @@ admission is not yet race-safe because session creation still runs on v1.
   content, so a tool that failed *with* output still shows that output. The
   durable `done` frame is normalized the same way (its per-model-call
   `aggregate_usage` becomes one total for the turn).
-- [ ] Show queued, running, completed, failed, cancelled, interrupted, partial,
-  and provisional states without presenting unsaved output as durable. Partial
-  and provisional display is already there (streamed text is marked "partial —
-  not saved" until the done frame). The request-level states are not: the
-  console does not yet read the root's execution status, which the durable
-  contract exposes on the message.
+- [x] Show queued, running, completed, failed, cancelled, interrupted, partial,
+  and provisional states without presenting unsaved output as durable. Streamed
+  text is marked provisional until the done frame, and an interrupted turn is
+  marked "partial — not saved" with a resend. Request-level state comes from the
+  durable record: on opening a session the console reads the latest root's
+  execution status from the canonical history and says, in plain terms, that the
+  request is queued, still running on the server, failed, cancelled, or
+  interrupted. A completed request says nothing (the transcript shows it) and the
+  notice is suppressed while a live turn streams, since the stream is then the
+  better source.
 - [x] Generate and reuse stable request IDs across SSE reconnects. The client
   generates an id per submission, sends it as `X-Client-Request-Id`, and records
   the id the backend confirmed on the turn. The partial-turn marker offers a
@@ -348,6 +352,7 @@ requirement can be marked Completed without relying on uncommitted local state.
 | 2026-09-19 | agent-runtime | `9570606` | `npm test` green (126 tests) — handler end-to-end tests (completed turn, reconnect dedup, failed model call) over the real pi loop with a scripted stream |
 | 2026-09-19 | managed-agents-backend | `5b6d2bb` | `gofmt -l .` clean; `go build ./...`; `go vet ./...`; `go test ./...`; `./scripts/check.sh` — clone/archive rules, adapter, HTTP routes, and error mapping covered |
 | 2026-09-19 | managed-agents-frontend | `e1f01fc` | `npm run build` green — durable done frame consumed (per-call aggregate normalized to a turn total) |
+| 2026-09-19 | managed-agents-frontend | `85bf519` | `npm run build` green — durable request state read on session open and shown in plain terms; absent when session.v2 is unavailable |
 | 2026-09-19 | managed-agents-frontend | `3b8aff5` | `npm run build` green — resend re-drives an interrupted turn under its original identity and explains a deduplicated replay instead of showing an empty reply |
 | 2026-09-19 | managed-agents-frontend | `f9c355a` | `npm run build` green — request identity generated, sent, and stored per turn (replay affordance deliberately not shipped; see the item note) |
 | 2026-09-19 | managed-agents-frontend | `5adf617` | `npm run build` green — tool results rendered from either contract via a boundary normalizer |
