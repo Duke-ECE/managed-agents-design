@@ -135,9 +135,11 @@ record exactly what is still missing.
   Handler-level coverage now exists for a completed turn, a duplicate delivery
   (reconnect), a failed model call, and a tool turn exercising both incremental
   boundaries; unit coverage exists for stale leases, lease expiry, compaction
-  failures, and usage reporting. Crash-boundary, long-output, and
-  cache-invalidation cases do not.
-- [x] Pass TypeScript strict build and all Node tests. `npm test` green (127
+  failures, usage reporting, and long tool output (the model-facing cap, its
+  explicit marker naming the preserved original, non-mutation of the stored
+  result, and user/assistant content left alone). Crash-boundary and
+  cache-invalidation cases do not exist.
+- [x] Pass TypeScript strict build and all Node tests. `npm test` green (138
   tests) under `tsc --strict`.
 
 Telemetry: `src/telemetry.ts` records compactions (token reduction derived from
@@ -153,7 +155,7 @@ Partial evidence: `src/canonical.ts`, `src/tokens.ts`, `src/durable-client.ts`,
 `src/durable-execution.ts`, `src/compaction.ts`, `src/runtime-events.ts`, and
 `src/durable-runtime.ts` (the `runtime.v2.AgentService` handler, registered
 alongside v1 and failing closed without a session-manager), with matching tests.
-`npm test` green (127 tests) at `c8580ec`, including the handler-level end-to-end
+`npm test` green (138 tests) at `a9b6f56`, including the handler-level end-to-end
 tests.
 
 Known gaps carried forward: crash-time reconciliation of a tool call whose
@@ -284,6 +286,7 @@ requirement can be marked Completed without relying on uncommitted local state.
 | 2026-09-19 | managed-agents-backend | `1e75113` | `gofmt -l .` clean; `go build ./...`; `go vet ./...`; `go test ./...`; `./scripts/check.sh` — PATCH refused uniformly, mutation path removed, row verified untouched |
 | 2026-09-19 | managed-agents-backend | `bdfc8d8` | `gofmt -l .` clean; `go build ./...`; `go vet ./...`; `go test ./...`; `./scripts/check.sh` — request identity generation, validation, and deterministic hashing; the session slice's first unit tests |
 | 2026-09-19 | managed-agents-backend | `323143b` | Same gates green — archived-template admission refused (410) before any runtime or session-manager call, with archived reads still available |
+| 2026-09-19 | agent-runtime | `a9b6f56` | `npm test` green (138 tests) — model-facing tool-output cap with a named reference to the preserved original |
 | 2026-09-19 | agent-runtime | `045cb90` | `npm test` green (133 tests) — durable-write latency and outcome emitted from a finally block, so refused writes are measured |
 | 2026-09-19 | agent-runtime | `d5bfcc2` | `npm test` green (131 tests) — structured telemetry with a credential/body-free record shape |
 | 2026-09-19 | agent-runtime | `c8580ec` | `npm test` green (127 tests) — tool-boundary persistence verified through the handler (assistant call before dispatch, result before the next model call, link by original id) |
