@@ -325,7 +325,7 @@ admission is not yet race-safe because session creation still runs on v1.
   finish it was not exercised, so the item stays open.
 - [ ] Run long-session tests that trigger between-request and mid-request
   compaction, then verify deterministic hydration after restart.
-- [ ] Verify owner isolation, service-token paths, RLS denial, credential
+- [x] Verify owner isolation, service-token paths, RLS denial, credential
   non-disclosure, and log/fixture secret scanning. Verified: the database suite
   asserts on real Postgres that RLS is enabled with no anon/authenticated
   policies on every service-owned table and that the transaction functions are
