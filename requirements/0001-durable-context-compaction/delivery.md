@@ -369,6 +369,19 @@ requirement can be marked Completed without relying on uncommitted local state.
 | 2026-09-19 | agent-runtime | `d5bfcc2` | `npm test` green (131 tests) — structured telemetry with a credential/body-free record shape |
 | 2026-09-19 | agent-runtime | `c8580ec` | `npm test` green (127 tests) — tool-boundary persistence verified through the handler (assistant call before dispatch, result before the next model call, link by original id) |
 
+| 2026-09-19 | session-manager | `6385031` | Non-destructive canonical schema: message fields, request-root state, revisions, lease columns, immutable config, checkpoints, mutation receipts; legacy v1 rows preserved as format 0 with last_seq backfilled (proved by scripts/verify-db.sh on a fresh database and on a v1 upgrade with retained rows) |
+| 2026-09-19 | session-manager | `ff095a3` | Transaction functions for admission/dedup, lease acquire/renew/release, append, finish, cancel, and checkpoint publication; failures carry a machine-readable reason in SQLSTATE DETAIL, execute is granted to service_role only (asserted by supabase/tests/durable_context.sql) |
+| 2026-09-19 | session-manager | `6149d01` | Durable domain types, the DurableStore port, and the v2 business rules, with no transport or storage imports |
+| 2026-09-19 | session-manager | `dde37e6` | PostgREST adapter over the transaction functions plus the behaviour-parity in-memory store |
+| 2026-09-19 | session-manager | `1239ccc` | session.v2 gRPC transport registered alongside v1; main assembles both services over one store |
+| 2026-09-19 | session-manager | `af5e56e` | AGENTS.md updated for the v2 contract, the transaction functions, and the database verification script |
+| 2026-09-19 | agent-runtime | `87eb529` | Pre-existing branch commit linking the shared design; the basis this work builds on |
+| 2026-09-19 | agent-runtime | `28b3c03` | Vendored the released v0.8.0 session/v2 and runtime/v2 contracts through scripts/sync-proto.sh |
+| 2026-09-19 | agent-runtime | `ca1c335` | Awaited session.v2 client with wire conversion and aborted-vs-conflict classification; the round trip over the vendored contract caught a real bug (the draft completeness field is status, not message_status) |
+| 2026-09-19 | agent-runtime | `5303b2d` | Exported the wire block decoder the v2 handler boundary needs |
+| 2026-09-19 | managed-agents-backend | `e0af002` | AGENTS.md documents the clone/archive lifecycle, owner-only and platform-read-only rules, and the admission revalidation (including that resume deliberately does not re-check) |
+| 2026-09-19 | managed-agents-backend | `d4c5b17` | Durable chat streamed over SSE under the shared event names, with the request identity echoed before the stream and a rejected submission answered as a real status code |
+
 Additional results are appended when the matching checklist item is complete.
 
 ## Pull requests and versions
