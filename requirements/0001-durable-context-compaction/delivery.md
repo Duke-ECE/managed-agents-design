@@ -300,8 +300,17 @@ admission is not yet race-safe because session creation still runs on v1.
   a selectable list that excludes archived templates while still resolving an
   open session's `agent_id` to a display name. Own templates offer Clone and
   Archive; platform and archived ones offer View and Clone.
-- [ ] Preserve cursor pagination, cache revalidation, cancellation, and history
-  navigation under the v2 response schema.
+- [x] Preserve cursor pagination, cache revalidation, cancellation, and history
+  navigation under the v2 response schema. All four are contract-agnostic at the
+  UI level and were left untouched: the same `limit`/`before_seq` window, the same
+  SWR cache and background revalidation, the same abort-on-Stop, and the same
+  Load-earlier navigation. The one thing the schema change did break is fixed: a
+  cancelled or interrupted turn is persisted as an assistant message with status
+  partial or interrupted, which the flat transcript route cannot express, so
+  reloading presented unfinished output as complete. The console reconciles the
+  canonical record on `seq` — both routes number canonical messages identically —
+  and marks those turns in the background after the transcript renders. A
+  deployment without session.v2 simply returns nothing to mark.
 - [ ] Pass the TypeScript and Vite production build.
 
 Exit criterion: UI state is a faithful projection of canonical storage and does
