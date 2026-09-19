@@ -133,14 +133,21 @@ trigger/target ratios, prefix reuse, conservative fallback), `src/durable-client
 classification), and `src/durable-execution.ts` (admission/dedup, renewable fenced
 lease, acknowledged batches, lease-loss abort, single terminal write), and
 `src/compaction.ts` (safe-cut selection, summary generation with a deadline and
-one retry, compare-and-publish through the lease, typed failures). Tested by
+one retry, compare-and-publish through the lease, typed failures), and
+`src/runtime-events.ts` (pure translation of agent events into runtime.v2 stream
+payloads with per-model-call usage). Tested by
 `test/canonical.test.ts`, `test/tokens.test.ts`, `test/durable-client.test.ts`
 (real gRPC server over the vendored contract), `test/durable-execution.test.ts`,
-and `test/compaction.test.ts` — `npm test` green (114 tests) at `1c0f55b`.
+`test/compaction.test.ts`, and `test/runtime-events.test.ts` — `npm test` green
+(123 tests) at `842d520`.
 Remaining: wiring these into `runtime.v2.AgentService` through pi's
 `beforeToolCall`/`afterToolCall`/`prepareNextTurnWithContext` hooks,
 deterministic hydration from the frozen configuration and active checkpoint,
-transfer of the v1 transcript fallback, and mid-request continuation.
+transfer of the v1 transcript fallback, and mid-request continuation. A first
+attempt at the handler was written and discarded rather than committed: it had a
+`require` call in ESM, an undeclared live-session field, and a compaction call
+with an empty message list, so it could not have been verified within the round.
+The handler is the next unit of work.
 
 Exit criterion: a request can survive process loss at every durable boundary and
 long contexts compact without overwriting source messages.
@@ -217,6 +224,7 @@ requirement can be marked Completed without relying on uncommitted local state.
 | 2026-09-19 | agent-runtime | `5961397` | `npx tsc --noEmit`; `npm test` green (90 tests) — vendored v0.8.0 v2 contracts, canonical message model, token estimator |
 | 2026-09-19 | agent-runtime | `5554602` | `npm test` green (103 tests) — session.v2 durable client (real gRPC round trip over the vendored contract) and the durable request lifecycle; PR CI green |
 | 2026-09-19 | agent-runtime | `1c0f55b` | `npm test` green (114 tests) — safe-cut compaction, summary deadline/retry/failure, compare-and-publish |
+| 2026-09-19 | agent-runtime | `842d520` | `npm test` green (123 tests) — pure agent-event → runtime.v2 stream translation |
 
 Additional results are appended when the matching checklist item is complete.
 
