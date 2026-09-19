@@ -264,9 +264,21 @@ admission is not yet race-safe because session creation still runs on v1.
 
 ### Phase 5: frontend structured history
 
-- [ ] Render canonical ordered blocks with tool-call/result associations.
+- [x] Render canonical ordered blocks with tool-call/result associations. The
+  live view normalizes both contracts at the boundary: a durable `tool_result`
+  (ordered content blocks plus a status enum) and a v1 one (a flat
+  ok/output/error triple) both become the shape the renderer knows, so a turn
+  renders identically before and after the cutover. Text blocks are flattened in
+  order, and a failure shows its error_code when it has one and otherwise its
+  content, so a tool that failed *with* output still shows that output. The
+  durable `done` frame is normalized the same way (its per-model-call
+  `aggregate_usage` becomes one total for the turn).
 - [ ] Show queued, running, completed, failed, cancelled, interrupted, partial,
-  and provisional states without presenting unsaved output as durable.
+  and provisional states without presenting unsaved output as durable. Partial
+  and provisional display is already there (streamed text is marked "partial —
+  not saved" until the done frame). The request-level states are not: the
+  console does not yet read the root's execution status, which the durable
+  contract exposes on the message.
 - [ ] Generate and reuse stable request IDs across SSE reconnects.
 - [x] Replace Edit/Delete template actions with Clone/Archive and filter archived
   templates from the default new-session picker. Delete became Archive (a
@@ -328,6 +340,8 @@ requirement can be marked Completed without relying on uncommitted local state.
 | 2026-09-19 | agent-runtime | `5b23f77` | `npm test` green (125 tests) — `runtime.v2.AgentService` handler registered alongside v1; PR CI green |
 | 2026-09-19 | agent-runtime | `9570606` | `npm test` green (126 tests) — handler end-to-end tests (completed turn, reconnect dedup, failed model call) over the real pi loop with a scripted stream |
 | 2026-09-19 | managed-agents-backend | `5b6d2bb` | `gofmt -l .` clean; `go build ./...`; `go vet ./...`; `go test ./...`; `./scripts/check.sh` — clone/archive rules, adapter, HTTP routes, and error mapping covered |
+| 2026-09-19 | managed-agents-frontend | `e1f01fc` | `npm run build` green — durable done frame consumed (per-call aggregate normalized to a turn total) |
+| 2026-09-19 | managed-agents-frontend | `5adf617` | `npm run build` green — tool results rendered from either contract via a boundary normalizer |
 | 2026-09-19 | managed-agents-frontend | `27e37c9` | `npm run build` (`tsc -b && vite build`) green — Edit state removed (type-enforced), own templates offer Clone/Archive only |
 | 2026-09-19 | managed-agents-frontend | `db1b5fe` | `npm run build` (`tsc -b && vite build`) green — archived templates excluded from new-chat selection, still resolved for display |
 | 2026-09-19 | managed-agents-frontend | `a30be68` | `npm run build` (`tsc -b && vite build`) green — archive replaces delete on the Agents page, archived state surfaced |
