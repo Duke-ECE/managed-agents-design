@@ -190,6 +190,8 @@ The template lifecycle slice is done; v2 orchestration, request identity,
 structured history, and archived-template admission are not.
 
 - [ ] Pin the released proto tag and switch session/runtime orchestration to v2.
+  The tag is pinned (`v0.8.0`) and `session.v2` is wired for canonical history
+  reads; the chat path still runs on `runtime.v1`, which is the remaining half.
 - [ ] Generate or accept a stable client request ID and deterministic request hash
   for every chat submission and reconnect. The primitive exists and is unit
   tested (`internal/session/identity.go`): a caller-supplied URL-safe id is
@@ -197,7 +199,13 @@ structured history, and archived-template admission are not.
   `req-<hex>` one is generated otherwise, and `RequestHash` binds the id to the
   exact content deterministically. It is deliberately not wired yet — nothing
   consumes it until the chat path moves to `runtime.v2`.
-- [ ] Expose structured message history and request execution state over HTTP.
+- [x] Expose structured message history and request execution state over HTTP.
+  `GET /api/sessions/:id/structured` serves the canonical session.v2 history:
+  ordered content blocks with tool-call/result links, per-message completeness,
+  and the request execution state on the initiating root, paginated like the v1
+  transcript. The session slice gained a `CanonicalStore` port, attached through
+  a functional option so the existing call sites were untouched, and a missing
+  v2 client answers not-implemented rather than an empty history.
 - [ ] Replace template mutation/deletion with create, clone, and archive; reject
   new sessions from archived templates while preserving existing sessions.
   Clone and archive are implemented end to end (migration, domain rules, store
@@ -296,6 +304,7 @@ requirement can be marked Completed without relying on uncommitted local state.
 | 2026-09-19 | managed-agents-frontend | `27e37c9` | `npm run build` (`tsc -b && vite build`) green — Edit state removed (type-enforced), own templates offer Clone/Archive only |
 | 2026-09-19 | managed-agents-frontend | `db1b5fe` | `npm run build` (`tsc -b && vite build`) green — archived templates excluded from new-chat selection, still resolved for display |
 | 2026-09-19 | managed-agents-frontend | `a30be68` | `npm run build` (`tsc -b && vite build`) green — archive replaces delete on the Agents page, archived state surfaced |
+| 2026-09-19 | managed-agents-backend | `e40ef01` | `gofmt -l .` clean; `go build ./...`; `go vet ./...`; `go test ./...` (10 packages); `./scripts/check.sh` — structured history route, ownership pass-through, not-implemented and bad-window paths covered; protos pinned to v0.8.0 |
 | 2026-09-19 | managed-agents-backend | `1e75113` | `gofmt -l .` clean; `go build ./...`; `go vet ./...`; `go test ./...`; `./scripts/check.sh` — PATCH refused uniformly, mutation path removed, row verified untouched |
 | 2026-09-19 | managed-agents-backend | `bdfc8d8` | `gofmt -l .` clean; `go build ./...`; `go vet ./...`; `go test ./...`; `./scripts/check.sh` — request identity generation, validation, and deterministic hashing; the session slice's first unit tests |
 | 2026-09-19 | managed-agents-backend | `323143b` | Same gates green — archived-template admission refused (410) before any runtime or session-manager call, with archived reads still available |
