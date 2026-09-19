@@ -222,7 +222,17 @@ structured history, and archived-template admission are not.
   the adapter, and the transport rather than left unreachable. `DELETE` and the
   frontend's Edit action remain; both are the coordinated API+UI half.
 - [ ] Resolve and persist one frozen session configuration at admission, using
-  credential references rather than transcript secrets.
+  credential references rather than transcript secrets. Implemented behind
+  `CANONICAL_SESSIONS` (default off): one session.v2 call writes the session
+  record and its frozen configuration together, so the resolved model, system
+  prompt, tools, and limits are fixed from the first turn. No API key reaches
+  the durable record — the credential is an (empty, for now) reference — and the
+  config hash binds a checkpoint to the configuration it was built under. The
+  flag keeps admission on v1 until the canonical schema is applied and the
+  runtime switches to v2, which is the coordinated cutover; canonical reads are
+  already always-on. Two known gaps: model limits are the same constants the
+  runtime's adapter uses today rather than per-model limits, and
+  `credential_ref` is empty because private credential storage does not exist.
 - [ ] Map revision/state/lease conflicts to stable HTTP/SSE errors and preserve
   cancellation as an allowed operation while a session is busy. The HTTP half is
   done: ABORTED (lost, expired, or contended lease; revision and mutation
@@ -314,6 +324,7 @@ requirement can be marked Completed without relying on uncommitted local state.
 | 2026-09-19 | managed-agents-frontend | `27e37c9` | `npm run build` (`tsc -b && vite build`) green — Edit state removed (type-enforced), own templates offer Clone/Archive only |
 | 2026-09-19 | managed-agents-frontend | `db1b5fe` | `npm run build` (`tsc -b && vite build`) green — archived templates excluded from new-chat selection, still resolved for display |
 | 2026-09-19 | managed-agents-frontend | `a30be68` | `npm run build` (`tsc -b && vite build`) green — archive replaces delete on the Agents page, archived state surfaced |
+| 2026-09-19 | managed-agents-backend | `2311436` | `gofmt -l .` clean; `go build ./...`; `go vet ./...`; `go test ./...` (10 packages); `./scripts/check.sh` — frozen-config admission behind a cutover flag, credential never persisted, config hash bound by a field-mutation test |
 | 2026-09-19 | managed-agents-backend | `a73183b` | `gofmt -l .` clean; `go build ./...`; `go vet ./...`; `go test ./...` (10 packages); `./scripts/check.sh` — SSE stream retryability derived from the gRPC code, pinned by a table test |
 | 2026-09-19 | managed-agents-backend | `f698682` | `gofmt -l .` clean; `go build ./...`; `go vet ./...`; `go test ./...` (10 packages); `./scripts/check.sh` — ABORTED/INVALID_ARGUMENT mapping pinned by a table test |
 | 2026-09-19 | managed-agents-backend | `e40ef01` | `gofmt -l .` clean; `go build ./...`; `go vet ./...`; `go test ./...` (10 packages); `./scripts/check.sh` — structured history route, ownership pass-through, not-implemented and bad-window paths covered; protos pinned to v0.8.0 |
