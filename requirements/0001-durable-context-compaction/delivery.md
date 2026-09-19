@@ -103,13 +103,15 @@ record exactly what is still missing.
 - [x] Pin the released proto tag and sync vendored proto files through the
   repository script.
 - [ ] Replace turn-end fire-and-forget persistence with request admission and
-  acknowledged incremental durable boundaries. Implemented: the v2 handler admits
-  through `BeginRequest`, persists through `beforeToolCall` / `afterToolCall`, and
-  finishes once. Handler-level end-to-end verification (a request surviving a
-  simulated crash at each boundary) is missing, so the item is not checked.
-- [ ] Acquire, renew, and fence a 90-second execution lease; stop writes and
-  inference immediately after lease loss. Implemented and unit-tested in
-  `DurableExecution`; not yet exercised through the handler.
+  acknowledged incremental durable boundaries. The handler's admission and
+  terminal boundaries are now verified end to end (a scripted model stream drives
+  the real pi loop against a fake session-manager). What is still missing is the
+  tool-boundary half: no test yet drives a turn that contains a tool call, so
+  `beforeToolCall` / `afterToolCall` persistence is unproven through the handler.
+- [x] Acquire, renew, and fence a 90-second execution lease; stop writes and
+  inference immediately after lease loss. Acquisition and use are verified end to
+  end; renewal, expiry takeover, stale-generation rejection, and the
+  stop-inference-on-lease-loss abort are unit-tested in `DurableExecution`.
 - [x] Preserve ordered text/tool blocks, stable tool-call IDs, result links,
   provider continuation metadata, and one usage record per model call. Covered by
   the canonical model, the client wire round trip, and the handler's per-model-call
@@ -129,25 +131,28 @@ record exactly what is still missing.
   Cancellation and reconnect-dedup are implemented; reconciling a tool call whose
   outcome is unknown after a crash is not.
 - [ ] Cover crash boundaries, duplicate delivery, stale leases, compaction races,
-  long tool output, missing provider usage, and cache invalidation in tests. Unit
-  coverage exists for stale leases, duplicate delivery, compaction failures, and
-  usage reporting; crash-boundary and long-output cases do not.
-- [x] Pass TypeScript strict build and all Node tests. `npm test` green (125 tests)
-  under `tsc --strict`.
+  long tool output, missing provider usage, and cache invalidation in tests.
+  Handler-level coverage now exists for a completed turn, a duplicate delivery
+  (reconnect), and a failed model call; unit coverage exists for stale leases,
+  lease expiry, compaction failures, and usage reporting. Crash-boundary,
+  tool-boundary, long-output, and cache-invalidation cases do not.
+- [x] Pass TypeScript strict build and all Node tests. `npm test` green (126
+  tests) under `tsc --strict`.
 
 Partial evidence: `src/canonical.ts`, `src/tokens.ts`, `src/durable-client.ts`,
 `src/durable-execution.ts`, `src/compaction.ts`, `src/runtime-events.ts`, and
 `src/durable-runtime.ts` (the `runtime.v2.AgentService` handler, registered
 alongside v1 and failing closed without a session-manager), with matching tests.
-`npm test` green (125 tests) at `5b23f77`.
+`npm test` green (126 tests) at `9570606`, including the handler-level end-to-end
+tests.
 
-Known gaps carried forward: the handler has no end-to-end test because the model
-stream function is constructed inside `liveSession` and needs an injection seam;
-a first attempt at the handler was discarded rather than committed after review
-found a `require` in ESM, an undeclared live-session field, and an empty
-compaction message list; and the frozen configuration's `credential_ref` is not
-resolvable because private credential storage does not exist yet, so the process
-`LLM_API_KEY` supplies the secret in the meantime.
+Known gaps carried forward: no handler test drives a turn containing a tool call
+(the model/stream seam exists now, so this is reachable); a first attempt at the
+handler was discarded rather than committed after review found a `require` in
+ESM, an undeclared live-session field, and an empty compaction message list; and
+the frozen configuration's `credential_ref` is not resolvable because private
+credential storage does not exist yet, so the process `LLM_API_KEY` supplies the
+secret in the meantime.
 
 Exit criterion: a request can survive process loss at every durable boundary and
 long contexts compact without overwriting source messages.
@@ -226,6 +231,7 @@ requirement can be marked Completed without relying on uncommitted local state.
 | 2026-09-19 | agent-runtime | `1c0f55b` | `npm test` green (114 tests) — safe-cut compaction, summary deadline/retry/failure, compare-and-publish |
 | 2026-09-19 | agent-runtime | `842d520` | `npm test` green (123 tests) — pure agent-event → runtime.v2 stream translation |
 | 2026-09-19 | agent-runtime | `5b23f77` | `npm test` green (125 tests) — `runtime.v2.AgentService` handler registered alongside v1; PR CI green |
+| 2026-09-19 | agent-runtime | `9570606` | `npm test` green (126 tests) — handler end-to-end tests (completed turn, reconnect dedup, failed model call) over the real pi loop with a scripted stream |
 
 Additional results are appended when the matching checklist item is complete.
 
