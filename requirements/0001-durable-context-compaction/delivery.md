@@ -190,15 +190,20 @@ The template lifecycle slice is done; v2 orchestration, request identity,
 structured history, and archived-template admission are not.
 
 - [ ] Pin the released proto tag and switch session/runtime orchestration to v2.
-  The tag is pinned (`v0.8.0`) and `session.v2` is wired for canonical history
-  reads; the chat path still runs on `runtime.v1`, which is the remaining half.
+  The tag is pinned (`v0.8.0`); `session.v2` serves canonical history reads and
+  canonical admission (behind `CANONICAL_SESSIONS`); `runtime.v2` is wired and
+  the slice's durable chat turn drives it. What remains is the HTTP/SSE route
+  that reaches that turn — including bridging v2 stream frames — plus the
+  frontend's structured rendering, which depend on it.
 - [ ] Generate or accept a stable client request ID and deterministic request hash
-  for every chat submission and reconnect. The primitive exists and is unit
-  tested (`internal/session/identity.go`): a caller-supplied URL-safe id is
-  honoured after validation so a reconnect can replay an in-flight id, a
-  `req-<hex>` one is generated otherwise, and `RequestHash` binds the id to the
-  exact content deterministically. It is deliberately not wired yet — nothing
-  consumes it until the chat path moves to `runtime.v2`.
+  for every chat submission and reconnect. Wired into the durable chat turn:
+  `Service.ChatTurn` derives the identity and passes it to `runtime.v2`, whose
+  request root carries `client_request_id` and `request_hash`, so session-manager
+  deduplicates a reconnect and refuses the same id carrying different content.
+  Content is encoded with the canonical binary encoding (protojson is not stable
+  across releases) with each block length-prefixed, so an identical replay hashes
+  identically and a changed one does not. The HTTP route that reaches this turn
+  is the remaining step; until it lands, the v1 chat path is authoritative.
 - [x] Expose structured message history and request execution state over HTTP.
   `GET /api/sessions/:id/structured` serves the canonical session.v2 history:
   ordered content blocks with tool-call/result links, per-message completeness,
@@ -324,6 +329,7 @@ requirement can be marked Completed without relying on uncommitted local state.
 | 2026-09-19 | managed-agents-frontend | `27e37c9` | `npm run build` (`tsc -b && vite build`) green — Edit state removed (type-enforced), own templates offer Clone/Archive only |
 | 2026-09-19 | managed-agents-frontend | `db1b5fe` | `npm run build` (`tsc -b && vite build`) green — archived templates excluded from new-chat selection, still resolved for display |
 | 2026-09-19 | managed-agents-frontend | `a30be68` | `npm run build` (`tsc -b && vite build`) green — archive replaces delete on the Agents page, archived state surfaced |
+| 2026-09-19 | managed-agents-backend | `2f42e16` | `gofmt -l .` clean; `go build ./...`; `go vet ./...`; `go test ./...` (10 packages); `./scripts/check.sh` — durable chat turn with a content-bound request identity, replay stability and changed-content divergence covered |
 | 2026-09-19 | managed-agents-backend | `2311436` | `gofmt -l .` clean; `go build ./...`; `go vet ./...`; `go test ./...` (10 packages); `./scripts/check.sh` — frozen-config admission behind a cutover flag, credential never persisted, config hash bound by a field-mutation test |
 | 2026-09-19 | managed-agents-backend | `a73183b` | `gofmt -l .` clean; `go build ./...`; `go vet ./...`; `go test ./...` (10 packages); `./scripts/check.sh` — SSE stream retryability derived from the gRPC code, pinned by a table test |
 | 2026-09-19 | managed-agents-backend | `f698682` | `gofmt -l .` clean; `go build ./...`; `go vet ./...`; `go test ./...` (10 packages); `./scripts/check.sh` — ABORTED/INVALID_ARGUMENT mapping pinned by a table test |
