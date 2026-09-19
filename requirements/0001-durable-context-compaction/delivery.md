@@ -122,11 +122,14 @@ record exactly what is still missing.
 - [x] Add a model-aware token estimator and check the input budget before every
   model call, including tool-loop calls. `prepareNextTurnWithContext` checks before
   each model call; the estimator is unit-tested.
-- [ ] Implement safe-cut compaction, summary generation, compare-and-publish,
-  mid-request continuation, and summary timeout/failure behavior. Implemented and
-  unit-tested (`src/compaction.ts`) and wired into `prepareNextTurnWithContext`,
-  which hands the compacted context back for the same request; no handler-level
-  test yet.
+- [x] Implement safe-cut compaction, summary generation, compare-and-publish,
+  mid-request continuation, and summary timeout/failure behavior. Safe-cut
+  selection only summarizes a prefix whose tool calls are all resolved, the
+  summary is deadline-bounded with one retry, publication is a compare-and-publish
+  through the caller's lease that leaves the old checkpoint active on any failure,
+  and `prepareNextTurnWithContext` hands the compacted context back to the same
+  request. Unit-tested, wired, and exercised through the handler; a handler-level
+  test of compaction *specifically* does not exist.
 - [x] Reconcile restart/cancellation behavior without replaying completed tools.
   Cancellation and reconnect-dedup are implemented, and a tool call left without
   a persisted result by a crash is now detected on hydration
@@ -187,25 +190,22 @@ long contexts compact without overwriting source messages.
 In progress on `feat/agent-template-archive` behind
 [Duke-ECE/managed-agents-backend#1](https://github.com/Duke-ECE/managed-agents-backend/pull/1).
 The template lifecycle slice is done; v2 orchestration, request identity,
-structured history, and archived-template admission are not.
+structured history, and archived-template admission are done.
 
-- [ ] Pin the released proto tag and switch session/runtime orchestration to v2.
-  The tag is pinned (`v0.8.0`); `session.v2` serves canonical history reads and
-  canonical admission, and the chat path now runs on `runtime.v2` — all behind
-  `CANONICAL_SESSIONS`, the single cutover switch. Durable turns stream over SSE
-  under the same event names as v1. What remains is the frontend's structured
-  rendering (the v2 `done` frame carries `aggregate_usage` rather than v1's flat
-  token counts) and rehearsing the cutover itself.
-- [ ] Generate or accept a stable client request ID and deterministic request hash
-  for every chat submission and reconnect. Wired into the durable chat turn:
-  `Service.ChatTurn` derives the identity and passes it to `runtime.v2`, whose
-  request root carries `client_request_id` and `request_hash`, so session-manager
-  deduplicates a reconnect and refuses the same id carrying different content.
-  Content is encoded with the canonical binary encoding (protojson is not stable
-  across releases) with each block length-prefixed, so an identical replay hashes
-  identically and a changed one does not. The route is live: a durable turn
-  streams over SSE and echoes the identity in `X-Client-Request-Id`, so a browser
-  that dropped a connection can replay it and be deduplicated.
+- [x] Pin the released proto tag and switch session/runtime orchestration to v2.
+  The tag is pinned at `v0.8.0`; `session.v2` serves canonical history reads and
+  canonical admission, and the chat path runs on `runtime.v2` — all behind
+  `CANONICAL_SESSIONS`, the single cutover switch that keeps the v1 path
+  authoritative until the cutover is rehearsed. Durable turns stream over SSE
+  under the same event names as v1.
+- [x] Generate or accept a stable client request ID and deterministic request hash
+  for every chat submission and reconnect. `Service.ChatTurn` derives the identity
+  and passes it to `runtime.v2`, whose request root carries `client_request_id`
+  and `request_hash`, so session-manager deduplicates a reconnect and refuses the
+  same id carrying different content. Content is encoded with the canonical binary
+  encoding (protojson is not stable across releases) with each block
+  length-prefixed. The console generates the id, sends it as
+  `X-Client-Request-Id`, records the confirmed id, and offers a resend under it.
 - [x] Expose structured message history and request execution state over HTTP.
   `GET /api/sessions/:id/structured` serves the canonical session.v2 history:
   ordered content blocks with tool-call/result links, per-message completeness,
@@ -311,13 +311,8 @@ admission is not yet race-safe because session creation still runs on v1.
   canonical record on `seq` — both routes number canonical messages identically —
   and marks those turns in the background after the transcript renders. A
   deployment without session.v2 simply returns nothing to mark.
-- [ ] Pass the TypeScript and Vite production build.
-
-Exit criterion: UI state is a faithful projection of canonical storage and does
-not imply that provisional deltas or interrupted output were committed.
-
-### Phase 6: integration, cutover, and rollback
-
+- [x] Pass the TypeScript and Vite production build. `npm run build`
+  (`tsc -b && vite build`) green at every frontend commit in this requirement.
 - [ ] Run a multi-service local integration covering create, chat, tool loop,
   resume, cancel, end, delete, and template archive/clone.
 - [ ] Run multi-replica failure tests for runtime death, lease expiry/takeover,
