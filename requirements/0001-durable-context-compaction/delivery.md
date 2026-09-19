@@ -236,18 +236,19 @@ structured history, and archived-template admission are done.
   already always-on. Two known gaps: model limits are the same constants the
   runtime's adapter uses today rather than per-model limits, and
   `credential_ref` is empty because private credential storage does not exist.
-- [ ] Map revision/state/lease conflicts to stable HTTP/SSE errors and preserve
-  cancellation as an allowed operation while a session is busy. The HTTP half is
-  done: ABORTED (lost, expired, or contended lease; revision and mutation
-  conflicts) maps to 409 and INVALID_ARGUMENT to 400, where both previously
-  surfaced as 500, and the mapping is pinned by a table test. UNAUTHENTICATED
-  deliberately stays 500 so an upstream service-token misconfiguration cannot
-  tell a browser to re-authenticate. The SSE half is done too: a failed chat
-  stream now reports whether it is worth retrying, derived from the gRPC code
-  (UNAVAILABLE, ABORTED, DEADLINE_EXCEEDED, RESOURCE_EXHAUSTED are retryable)
-  instead of the hardcoded false that made every transient failure look
-  permanent. The busy-session cancellation path waits for the v2 chat
-  orchestration.
+- [x] Map revision/state/lease conflicts to stable HTTP/SSE errors and preserve
+  cancellation as an allowed operation while a session is busy. ABORTED (a lost,
+  expired, or contended lease; a revision or mutation conflict) maps to 409 and
+  INVALID_ARGUMENT to 400, where both previously surfaced as 500; UNAUTHENTICATED
+  deliberately stays 500 so an upstream service-token misconfiguration cannot tell
+  a browser to re-authenticate. A failed chat stream reports whether it is worth
+  retrying, derived from the gRPC code, instead of the hardcoded false that made
+  every transient failure look permanent. Cancellation is independent of
+  admission: `POST /api/sessions/:id/cancel` drives the runtime's cancel RPC and
+  reaches a turn this browser is not streaming — one running on another replica,
+  or one left running after a dropped connection — which aborting a local fetch
+  cannot. The owning runtime still writes the terminal state with its partial
+  output, so a cancelled turn is never presented as completed.
 - [x] Pass gofmt, build, vet, unit tests, and whole-service integration tests.
   `gofmt -l .` clean, `go build ./...`, `go vet ./...`, `go test ./...`, and
   `./scripts/check.sh` green at the template-lifecycle commits (`5b6d2bb`,
@@ -387,6 +388,8 @@ requirement can be marked Completed without relying on uncommitted local state.
 | 2026-09-19 | agent-runtime | `5303b2d` | Exported the wire block decoder the v2 handler boundary needs |
 | 2026-09-19 | managed-agents-backend | `e0af002` | AGENTS.md documents the clone/archive lifecycle, owner-only and platform-read-only rules, and the admission revalidation (including that resume deliberately does not re-check) |
 | 2026-09-19 | managed-agents-backend | `aea65bc` | `gofmt -l .` clean; `go build ./...`; `go vet ./...`; `go test ./...` (10 packages); `./scripts/check.sh` — hard deletion retired across route, handler, rule, port, and adapter |
+| 2026-09-19 | managed-agents-backend | `6a67872` | `gofmt -l .` clean; `go build ./...`; `go vet ./...`; `go test ./...` (10 packages); `./scripts/check.sh` — cancellation independent of admission, refusal reported as a conflict |
+| 2026-09-19 | managed-agents-frontend | `11f6032` | `npm run build` green — cancel offered for a turn running elsewhere |
 | 2026-09-19 | managed-agents-backend | `45671f1` | Guide updated: no delete route, PATCH described as a uniform immutability refusal |
 | 2026-09-19 | managed-agents-frontend | `f73c048` | `npm run build` green — the dead `deleteAgent` client removed |
 | 2026-09-19 | managed-agents-backend | `d4c5b17` | Durable chat streamed over SSE under the shared event names, with the request identity echoed before the stream and a rejected submission answered as a real status code |
