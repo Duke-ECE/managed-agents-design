@@ -102,12 +102,12 @@ record exactly what is still missing.
 
 - [x] Pin the released proto tag and sync vendored proto files through the
   repository script.
-- [ ] Replace turn-end fire-and-forget persistence with request admission and
-  acknowledged incremental durable boundaries. The handler's admission and
-  terminal boundaries are now verified end to end (a scripted model stream drives
-  the real pi loop against a fake session-manager). What is still missing is the
-  tool-boundary half: no test yet drives a turn that contains a tool call, so
-  `beforeToolCall` / `afterToolCall` persistence is unproven through the handler.
+- [x] Replace turn-end fire-and-forget persistence with request admission and
+  acknowledged incremental durable boundaries. Verified end to end: admission
+  precedes lease acquisition, the assistant tool-call message is acknowledged
+  before dispatch, the observed result is acknowledged before the next model
+  call linked by the original tool-call id, and exactly one terminal write
+  carries the final output.
 - [x] Acquire, renew, and fence a 90-second execution lease; stop writes and
   inference immediately after lease loss. Acquisition and use are verified end to
   end; renewal, expiry takeover, stale-generation rejection, and the
@@ -133,24 +133,25 @@ record exactly what is still missing.
 - [ ] Cover crash boundaries, duplicate delivery, stale leases, compaction races,
   long tool output, missing provider usage, and cache invalidation in tests.
   Handler-level coverage now exists for a completed turn, a duplicate delivery
-  (reconnect), and a failed model call; unit coverage exists for stale leases,
-  lease expiry, compaction failures, and usage reporting. Crash-boundary,
-  tool-boundary, long-output, and cache-invalidation cases do not.
-- [x] Pass TypeScript strict build and all Node tests. `npm test` green (126
+  (reconnect), a failed model call, and a tool turn exercising both incremental
+  boundaries; unit coverage exists for stale leases, lease expiry, compaction
+  failures, and usage reporting. Crash-boundary, long-output, and
+  cache-invalidation cases do not.
+- [x] Pass TypeScript strict build and all Node tests. `npm test` green (127
   tests) under `tsc --strict`.
 
 Partial evidence: `src/canonical.ts`, `src/tokens.ts`, `src/durable-client.ts`,
 `src/durable-execution.ts`, `src/compaction.ts`, `src/runtime-events.ts`, and
 `src/durable-runtime.ts` (the `runtime.v2.AgentService` handler, registered
 alongside v1 and failing closed without a session-manager), with matching tests.
-`npm test` green (126 tests) at `9570606`, including the handler-level end-to-end
+`npm test` green (127 tests) at `c8580ec`, including the handler-level end-to-end
 tests.
 
-Known gaps carried forward: no handler test drives a turn containing a tool call
-(the model/stream seam exists now, so this is reachable); a first attempt at the
-handler was discarded rather than committed after review found a `require` in
-ESM, an undeclared live-session field, and an empty compaction message list; and
-the frozen configuration's `credential_ref` is not resolvable because private
+Known gaps carried forward: crash-time reconciliation of a tool call whose
+outcome is unknown is not implemented; a first attempt at the handler was
+discarded rather than committed after review found a `require` in ESM, an
+undeclared live-session field, and an empty compaction message list; and the
+frozen configuration's `credential_ref` is not resolvable because private
 credential storage does not exist yet, so the process `LLM_API_KEY` supplies the
 secret in the meantime.
 
@@ -232,6 +233,7 @@ requirement can be marked Completed without relying on uncommitted local state.
 | 2026-09-19 | agent-runtime | `842d520` | `npm test` green (123 tests) — pure agent-event → runtime.v2 stream translation |
 | 2026-09-19 | agent-runtime | `5b23f77` | `npm test` green (125 tests) — `runtime.v2.AgentService` handler registered alongside v1; PR CI green |
 | 2026-09-19 | agent-runtime | `9570606` | `npm test` green (126 tests) — handler end-to-end tests (completed turn, reconnect dedup, failed model call) over the real pi loop with a scripted stream |
+| 2026-09-19 | agent-runtime | `c8580ec` | `npm test` green (127 tests) — tool-boundary persistence verified through the handler (assistant call before dispatch, result before the next model call, link by original id) |
 
 Additional results are appended when the matching checklist item is complete.
 
