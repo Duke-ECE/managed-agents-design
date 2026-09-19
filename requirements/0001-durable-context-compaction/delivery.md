@@ -324,7 +324,13 @@ admission is not yet race-safe because session creation still runs on v1.
   mutation rejection is unit-tested. A replica *taking over* the orphaned lease to
   finish it was not exercised, so the item stays open.
 - [ ] Run long-session tests that trigger between-request and mid-request
-  compaction, then verify deterministic hydration after restart.
+  compaction, then verify deterministic hydration after restart. Mid-request
+  compaction is verified across services (see the long-session compaction run
+  below): a turn over a small-window session compacted and published a checkpoint
+  while retaining every original message. Between-request compaction and
+  hydration *from a checkpoint* after a restart were not separately exercised, and
+  the run's two bug fixes show how much the live path differed from the tested
+  one.
 - [x] Verify owner isolation, service-token paths, RLS denial, credential
   non-disclosure, and log/fixture secret scanning. Verified: the database suite
   asserts on real Postgres that RLS is enabled with no anon/authenticated
@@ -477,6 +483,27 @@ asks it to so a turn stays in flight.
   transcript advanced to a second root), and B's hydrated context carried the
   earlier turn — the throwaway endpoint matched text that existed only in the
   durable history.
+
+**Long-session compaction run.** A session admitted with a deliberately small
+context window (3000 tokens, 200 output limit, so the input budget is 800 and the
+trigger 640) was driven through a tool turn with a long input. Compaction fired,
+summarized, and published a checkpoint: `covered_through_seq` 1, summary present,
+`prompt_version` v1, summarizer model recorded, estimated tokens **1284 before and
+49 after**. The transcript still held all four original messages — compaction moved
+the context pointer without overwriting history, which is the design's central
+promise.
+
+This run found two bugs that no unit test had caught, both since fixed:
+
+1. the tracked canonical view never included the request root, so the input
+   estimate under-counted by the whole user message and the budget check fired
+   late or never — exactly the long-input case compaction exists for;
+2. `publishCheckpoint` built its guard without a mutation hash, so session-manager
+   rejected every publication and compaction could never have published at all.
+
+They survived unit testing because those tests either inject the checkpoint
+publisher directly (so no real guard is validated) or build the context shape by
+hand (so the omission is invisible). A regression test now pins the guard hash.
 
 **Not verified by these runs**, and therefore not claimed: a replica *taking over*
 the orphaned turn's lease to finish it (the run terminated it through the owner's
