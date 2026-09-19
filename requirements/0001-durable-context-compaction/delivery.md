@@ -183,8 +183,12 @@ structured history, and archived-template admission are not.
   revalidates archival server-side: a new session from an archived template is
   refused before the runtime or session-manager is touched, while resume is
   deliberately not gated so existing sessions keep running, and the template
-  stays readable and cloneable. One part remains: retiring `PATCH`/`DELETE`,
-  a coordinated API+UI change that lands with the frontend.
+  stays readable and cloneable. Editing is now genuinely impossible rather than
+  merely discouraged: PATCH returns a uniform 400 (`ErrImmutableMutation`) that
+  is produced before any ownership lookup, so it cannot probe another user's
+  templates, and the mutation path was removed from the domain, the store port,
+  the adapter, and the transport rather than left unreachable. `DELETE` and the
+  frontend's Edit action remain; both are the coordinated API+UI half.
 - [ ] Resolve and persist one frozen session configuration at admission, using
   credential references rather than transcript secrets.
 - [ ] Map revision/state/lease conflicts to stable HTTP/SSE errors and preserve
@@ -213,9 +217,10 @@ admission is not yet race-safe because session creation still runs on v1.
   that excludes archived templates (options, default selection, and the
   no-usable-agent check) while the full list still resolves an open session's
   agent_id to a display name, so an archived template a live session already
-  resolved keeps its badge. Edit remains deliberately: retiring it means
-  retiring the backend PATCH endpoint in the same coordinated change, so that
-  half of the item is not done.
+  resolved keeps its badge. Edit remains: the endpoint it calls is now a
+  uniform refusal rather than a working mutation, so selecting it surfaces the
+  backend's "templates are immutable; clone" message instead of editing. Hiding
+  or replacing that action is the last piece of this item.
 - [ ] Preserve cursor pagination, cache revalidation, cancellation, and history
   navigation under the v2 response schema.
 - [ ] Pass the TypeScript and Vite production build.
@@ -269,6 +274,7 @@ requirement can be marked Completed without relying on uncommitted local state.
 | 2026-09-19 | managed-agents-backend | `5b6d2bb` | `gofmt -l .` clean; `go build ./...`; `go vet ./...`; `go test ./...`; `./scripts/check.sh` — clone/archive rules, adapter, HTTP routes, and error mapping covered |
 | 2026-09-19 | managed-agents-frontend | `db1b5fe` | `npm run build` (`tsc -b && vite build`) green — archived templates excluded from new-chat selection, still resolved for display |
 | 2026-09-19 | managed-agents-frontend | `a30be68` | `npm run build` (`tsc -b && vite build`) green — archive replaces delete on the Agents page, archived state surfaced |
+| 2026-09-19 | managed-agents-backend | `1e75113` | `gofmt -l .` clean; `go build ./...`; `go vet ./...`; `go test ./...`; `./scripts/check.sh` — PATCH refused uniformly, mutation path removed, row verified untouched |
 | 2026-09-19 | managed-agents-backend | `bdfc8d8` | `gofmt -l .` clean; `go build ./...`; `go vet ./...`; `go test ./...`; `./scripts/check.sh` — request identity generation, validation, and deterministic hashing; the session slice's first unit tests |
 | 2026-09-19 | managed-agents-backend | `323143b` | Same gates green — archived-template admission refused (410) before any runtime or session-manager call, with archived reads still available |
 | 2026-09-19 | agent-runtime | `c8580ec` | `npm test` green (127 tests) — tool-boundary persistence verified through the handler (assistant call before dispatch, result before the next model call, link by original id) |
