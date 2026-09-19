@@ -127,9 +127,16 @@ record exactly what is still missing.
   unit-tested (`src/compaction.ts`) and wired into `prepareNextTurnWithContext`,
   which hands the compacted context back for the same request; no handler-level
   test yet.
-- [ ] Reconcile restart/cancellation behavior without replaying completed tools.
-  Cancellation and reconnect-dedup are implemented; reconciling a tool call whose
-  outcome is unknown after a crash is not.
+- [x] Reconcile restart/cancellation behavior without replaying completed tools.
+  Cancellation and reconnect-dedup are implemented, and a tool call left without
+  a persisted result by a crash is now detected on hydration
+  (`unresolvedToolCallsInHistory`) and excluded from model context rather than
+  replayed as a dangling call — replaying it would violate the provider protocol
+  and invite a fabricated result. The mirror case, an orphan result whose call
+  was summarized away, is dropped too, and the unknown outcome is reported as
+  telemetry so the turn can require an explicit retry decision. Reconciling
+  through an executor's own status/idempotency remains future work, because no
+  executor is wired yet.
 - [ ] Cover crash boundaries, duplicate delivery, stale leases, compaction races,
   long tool output, missing provider usage, and cache invalidation in tests.
   Handler-level coverage now exists for a completed turn, a duplicate delivery
@@ -138,8 +145,10 @@ record exactly what is still missing.
   failures, usage reporting, and long tool output (the model-facing cap, its
   explicit marker naming the preserved original, non-mutation of the stored
   result, and user/assistant content left alone). Crash-boundary and
-  cache-invalidation cases do not exist.
-- [x] Pass TypeScript strict build and all Node tests. `npm test` green (138
+  cache-invalidation cases do not exist. Crash-dangling tool calls are covered
+  (detection, exclusion from context, and the record), but a simulated
+  process-kill at each durable boundary is not.
+- [x] Pass TypeScript strict build and all Node tests. `npm test` green (144
   tests) under `tsc --strict`.
 
 Telemetry: `src/telemetry.ts` records compactions (token reduction derived from
@@ -155,7 +164,7 @@ Partial evidence: `src/canonical.ts`, `src/tokens.ts`, `src/durable-client.ts`,
 `src/durable-execution.ts`, `src/compaction.ts`, `src/runtime-events.ts`, and
 `src/durable-runtime.ts` (the `runtime.v2.AgentService` handler, registered
 alongside v1 and failing closed without a session-manager), with matching tests.
-`npm test` green (138 tests) at `a9b6f56`, including the handler-level end-to-end
+`npm test` green (144 tests) at `3fb5858`, including the handler-level end-to-end
 tests.
 
 Known gaps carried forward: crash-time reconciliation of a tool call whose
@@ -286,6 +295,7 @@ requirement can be marked Completed without relying on uncommitted local state.
 | 2026-09-19 | managed-agents-backend | `1e75113` | `gofmt -l .` clean; `go build ./...`; `go vet ./...`; `go test ./...`; `./scripts/check.sh` — PATCH refused uniformly, mutation path removed, row verified untouched |
 | 2026-09-19 | managed-agents-backend | `bdfc8d8` | `gofmt -l .` clean; `go build ./...`; `go vet ./...`; `go test ./...`; `./scripts/check.sh` — request identity generation, validation, and deterministic hashing; the session slice's first unit tests |
 | 2026-09-19 | managed-agents-backend | `323143b` | Same gates green — archived-template admission refused (410) before any runtime or session-manager call, with archived reads still available |
+| 2026-09-19 | agent-runtime | `3fb5858` | `npm test` green (144 tests) — crash-dangling tool calls detected, excluded from context, and reported |
 | 2026-09-19 | agent-runtime | `a9b6f56` | `npm test` green (138 tests) — model-facing tool-output cap with a named reference to the preserved original |
 | 2026-09-19 | agent-runtime | `045cb90` | `npm test` green (133 tests) — durable-write latency and outcome emitted from a finally block, so refused writes are measured |
 | 2026-09-19 | agent-runtime | `d5bfcc2` | `npm test` green (131 tests) — structured telemetry with a credential/body-free record shape |
