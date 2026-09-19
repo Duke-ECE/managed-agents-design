@@ -160,20 +160,35 @@ long contexts compact without overwriting source messages.
 
 ### Phase 4: backend admission and immutable templates
 
+In progress on `feat/agent-template-archive` behind
+[Duke-ECE/managed-agents-backend#1](https://github.com/Duke-ECE/managed-agents-backend/pull/1).
+The template lifecycle slice is done; v2 orchestration, request identity,
+structured history, and archived-template admission are not.
+
 - [ ] Pin the released proto tag and switch session/runtime orchestration to v2.
 - [ ] Generate or accept a stable client request ID and deterministic request hash
   for every chat submission and reconnect.
 - [ ] Expose structured message history and request execution state over HTTP.
 - [ ] Replace template mutation/deletion with create, clone, and archive; reject
   new sessions from archived templates while preserving existing sessions.
+  Clone and archive are implemented end to end (migration, domain rules, store
+  port, PostgREST adapter, HTTP routes, tests) per decision D001: templates are
+  immutable, cloning copies configuration into a new private identity, and
+  archiving is owner-only, idempotent, and content-preserving. Two parts remain:
+  retiring `PATCH`/`DELETE` (a coordinated API+UI change that lands with the
+  frontend) and refusing new sessions from an archived template at admission.
 - [ ] Resolve and persist one frozen session configuration at admission, using
   credential references rather than transcript secrets.
 - [ ] Map revision/state/lease conflicts to stable HTTP/SSE errors and preserve
   cancellation as an allowed operation while a session is busy.
-- [ ] Pass gofmt, build, vet, unit tests, and whole-service integration tests.
+- [x] Pass gofmt, build, vet, unit tests, and whole-service integration tests.
+  `gofmt -l .` clean, `go build ./...`, `go vet ./...`, `go test ./...`, and
+  `./scripts/check.sh` green at the template-lifecycle commit.
 
 Exit criterion: browser requests are idempotent, session admission is race-safe,
-and templates/configuration cannot silently mutate a running session.
+and templates/configuration cannot silently mutate a running session. Partially
+met: templates can no longer mutate a session through the new lifecycle, but
+admission is not yet race-safe because session creation still runs on v1.
 
 ### Phase 5: frontend structured history
 
@@ -233,6 +248,7 @@ requirement can be marked Completed without relying on uncommitted local state.
 | 2026-09-19 | agent-runtime | `842d520` | `npm test` green (123 tests) — pure agent-event → runtime.v2 stream translation |
 | 2026-09-19 | agent-runtime | `5b23f77` | `npm test` green (125 tests) — `runtime.v2.AgentService` handler registered alongside v1; PR CI green |
 | 2026-09-19 | agent-runtime | `9570606` | `npm test` green (126 tests) — handler end-to-end tests (completed turn, reconnect dedup, failed model call) over the real pi loop with a scripted stream |
+| 2026-09-19 | managed-agents-backend | template lifecycle | `gofmt -l .` clean; `go build ./...`; `go vet ./...`; `go test ./...`; `./scripts/check.sh` — clone/archive rules, adapter, HTTP routes, and errors-to-status mapping covered |
 | 2026-09-19 | agent-runtime | `c8580ec` | `npm test` green (127 tests) — tool-boundary persistence verified through the handler (assistant call before dispatch, result before the next model call, link by original id) |
 
 Additional results are appended when the matching checklist item is complete.
@@ -246,6 +262,8 @@ Additional results are appended when the matching checklist item is complete.
   cutover in phase 6, so the merge waits for the coordinated rollover.
 - agent-runtime: [Duke-ECE/agent-runtime#1](https://github.com/Duke-ECE/agent-runtime/pull/1)
   — phase 3 in progress.
+- managed-agents-backend: [Duke-ECE/managed-agents-backend#1](https://github.com/Duke-ECE/managed-agents-backend/pull/1)
+  — phase 4 template lifecycle (D001), first slice.
 - Release tags: protos `v0.8.0` (`f3db971`) — `session/v2` + `runtime/v2`
   contracts; the immutable tag consumers pin.
 
