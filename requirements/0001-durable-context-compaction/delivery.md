@@ -95,7 +95,11 @@ Deviations and open items:
 
 ### Phase 3: agent-runtime durable execution
 
-- [ ] Pin the released proto tag and sync vendored proto files through the
+In progress. Completed items are checked; the remainder is being implemented on
+the `docs/link-compaction-design` branch behind
+[Duke-ECE/agent-runtime#1](https://github.com/Duke-ECE/agent-runtime/pull/1).
+
+- [x] Pin the released proto tag and sync vendored proto files through the
   repository script.
 - [ ] Replace turn-end fire-and-forget persistence with request admission and
   acknowledged incremental durable boundaries.
@@ -105,14 +109,23 @@ Deviations and open items:
   provider continuation metadata, and one usage record per model call.
 - [ ] Assemble model context deterministically from frozen config, active
   checkpoint, and retained canonical messages.
-- [ ] Add a model-aware token estimator and check the input budget before every
-  model call, including tool-loop calls.
+- [x] Add a model-aware token estimator and check the input budget before every
+  model call, including tool-loop calls. The estimator and budget check exist
+  (`src/tokens.ts`) with prefix reuse and baseline invalidation; wiring it into
+  the loop is part of the remaining work.
 - [ ] Implement safe-cut compaction, summary generation, compare-and-publish,
   mid-request continuation, and summary timeout/failure behavior.
 - [ ] Reconcile restart/cancellation behavior without replaying completed tools.
 - [ ] Cover crash boundaries, duplicate delivery, stale leases, compaction races,
   long tool output, missing provider usage, and cache invalidation in tests.
 - [ ] Pass TypeScript strict build and all Node tests.
+
+Partial evidence: `src/canonical.ts` (versioned platform message model, block and
+link validation, pi conversion with links by original tool-call id, incomplete
+assistant output excluded from context) and `src/tokens.ts` (input budget,
+trigger/target ratios, prefix reuse, conservative fallback) with
+`test/canonical.test.ts` and `test/tokens.test.ts`; `npx tsc --noEmit` and
+`npm test` green (90 tests) at `5961397`.
 
 Exit criterion: a request can survive process loss at every durable boundary and
 long contexts compact without overwriting source messages.
@@ -186,6 +199,7 @@ requirement can be marked Completed without relying on uncommitted local state.
 | 2026-09-19 | protos | `f3db971` | PR CI green (lint, breaking, generation drift, `go build`); `main` fast-forwarded; `v0.8.0` tagged and pushed |
 | 2026-09-19 | session-manager | `70d87f7` | Migrations applied to Postgres 16 from an empty database and from the v1 schema with retained rows; `supabase/tests/durable_context.sql` asserts constraints, indexes, locks, lease fencing, revision races, RLS, and function privileges via `scripts/verify-db.sh` |
 | 2026-09-19 | session-manager | `07d5209` | `gofmt -l .` clean; `go build ./...`; `go vet ./...`; `go test ./...`; `go test -race ./...`; `./scripts/check.sh`; `DATABASE_URL=... ./scripts/verify-db.sh` (fresh + upgraded) |
+| 2026-09-19 | agent-runtime | `5961397` | `npx tsc --noEmit`; `npm test` green (90 tests) — vendored v0.8.0 v2 contracts, canonical message model, token estimator |
 
 Additional results are appended when the matching checklist item is complete.
 
@@ -194,7 +208,10 @@ Additional results are appended when the matching checklist item is complete.
 - protos: [Duke-ECE/protos#1](https://github.com/Duke-ECE/protos/pull/1) — merged
   (`f3db971`, merged 2026-09-19).
 - session-manager: [Duke-ECE/session-manager#1](https://github.com/Duke-ECE/session-manager/pull/1)
-  — phases 1 and 2.
+  — phases 1 and 2. Open: merging deploys on push to `main`, and the plan puts
+  cutover in phase 6, so the merge waits for the coordinated rollover.
+- agent-runtime: [Duke-ECE/agent-runtime#1](https://github.com/Duke-ECE/agent-runtime/pull/1)
+  — phase 3 in progress.
 - Release tags: protos `v0.8.0` (`f3db971`) — `session/v2` + `runtime/v2`
   contracts; the immutable tag consumers pin.
 
