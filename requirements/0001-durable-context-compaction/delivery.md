@@ -415,6 +415,7 @@ requirement can be marked Completed without relying on uncommitted local state.
 | 2026-09-19 | managed-agents-backend | `e0af002` | AGENTS.md documents the clone/archive lifecycle, owner-only and platform-read-only rules, and the admission revalidation (including that resume deliberately does not re-check) |
 | 2026-09-19 | managed-agents-backend | `aea65bc` | `gofmt -l .` clean; `go build ./...`; `go vet ./...`; `go test ./...` (10 packages); `./scripts/check.sh` — hard deletion retired across route, handler, rule, port, and adapter |
 | 2026-09-19 | managed-agents-backend | `6a67872` | `gofmt -l .` clean; `go build ./...`; `go vet ./...`; `go test ./...` (10 packages); `./scripts/check.sh` — cancellation independent of admission, refusal reported as a conflict |
+| 2026-09-19 | agent-runtime | `1d71239` | `npm test` green (149 tests) — compaction could not publish: the request root was missing from the estimated context and the checkpoint guard carried no mutation hash; both fixed after a live two-service run found them |
 | 2026-09-19 | session-manager | `0005144` | Secret scan widened to every committed file; `./scripts/check.sh` green |
 | 2026-09-19 | managed-agents-backend | `320b3f2` | Secret scan widened to every committed file; `./scripts/check.sh` green |
 | 2026-09-19 | managed-agents-frontend | `11f6032` | `npm run build` green — cancel offered for a turn running elsewhere |
