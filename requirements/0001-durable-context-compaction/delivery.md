@@ -191,10 +191,11 @@ structured history, and archived-template admission are not.
 
 - [ ] Pin the released proto tag and switch session/runtime orchestration to v2.
   The tag is pinned (`v0.8.0`); `session.v2` serves canonical history reads and
-  canonical admission (behind `CANONICAL_SESSIONS`); `runtime.v2` is wired and
-  the slice's durable chat turn drives it. What remains is the HTTP/SSE route
-  that reaches that turn — including bridging v2 stream frames — plus the
-  frontend's structured rendering, which depend on it.
+  canonical admission, and the chat path now runs on `runtime.v2` — all behind
+  `CANONICAL_SESSIONS`, the single cutover switch. Durable turns stream over SSE
+  under the same event names as v1. What remains is the frontend's structured
+  rendering (the v2 `done` frame carries `aggregate_usage` rather than v1's flat
+  token counts) and rehearsing the cutover itself.
 - [ ] Generate or accept a stable client request ID and deterministic request hash
   for every chat submission and reconnect. Wired into the durable chat turn:
   `Service.ChatTurn` derives the identity and passes it to `runtime.v2`, whose
@@ -202,8 +203,9 @@ structured history, and archived-template admission are not.
   deduplicates a reconnect and refuses the same id carrying different content.
   Content is encoded with the canonical binary encoding (protojson is not stable
   across releases) with each block length-prefixed, so an identical replay hashes
-  identically and a changed one does not. The HTTP route that reaches this turn
-  is the remaining step; until it lands, the v1 chat path is authoritative.
+  identically and a changed one does not. The route is live: a durable turn
+  streams over SSE and echoes the identity in `X-Client-Request-Id`, so a browser
+  that dropped a connection can replay it and be deduplicated.
 - [x] Expose structured message history and request execution state over HTTP.
   `GET /api/sessions/:id/structured` serves the canonical session.v2 history:
   ordered content blocks with tool-call/result links, per-message completeness,
