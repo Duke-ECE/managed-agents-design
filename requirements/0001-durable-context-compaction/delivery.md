@@ -122,10 +122,18 @@ the `docs/link-compaction-design` branch behind
 
 Partial evidence: `src/canonical.ts` (versioned platform message model, block and
 link validation, pi conversion with links by original tool-call id, incomplete
-assistant output excluded from context) and `src/tokens.ts` (input budget,
-trigger/target ratios, prefix reuse, conservative fallback) with
-`test/canonical.test.ts` and `test/tokens.test.ts`; `npx tsc --noEmit` and
-`npm test` green (90 tests) at `5961397`.
+assistant output excluded from context), `src/tokens.ts` (input budget,
+trigger/target ratios, prefix reuse, conservative fallback), `src/durable-client.ts`
+(awaited session.v2 client with wire conversion and retryable-vs-conflict error
+classification), and `src/durable-execution.ts` (admission/dedup, renewable fenced
+lease, acknowledged batches, lease-loss abort, single terminal write). Tested by
+`test/canonical.test.ts`, `test/tokens.test.ts`, `test/durable-client.test.ts`
+(real gRPC server over the vendored contract), and `test/durable-execution.test.ts`
+— `npm test` green (103 tests) at `5554602`. Remaining: wiring these into
+`runtime.v2.AgentService` through pi's `beforeToolCall`/`afterToolCall`/
+`prepareNextTurnWithContext` hooks, deterministic hydration from the frozen
+configuration and active checkpoint, transfer of the v1 transcript fallback, and
+compaction.
 
 Exit criterion: a request can survive process loss at every durable boundary and
 long contexts compact without overwriting source messages.
@@ -200,6 +208,7 @@ requirement can be marked Completed without relying on uncommitted local state.
 | 2026-09-19 | session-manager | `70d87f7` | Migrations applied to Postgres 16 from an empty database and from the v1 schema with retained rows; `supabase/tests/durable_context.sql` asserts constraints, indexes, locks, lease fencing, revision races, RLS, and function privileges via `scripts/verify-db.sh` |
 | 2026-09-19 | session-manager | `07d5209` | `gofmt -l .` clean; `go build ./...`; `go vet ./...`; `go test ./...`; `go test -race ./...`; `./scripts/check.sh`; `DATABASE_URL=... ./scripts/verify-db.sh` (fresh + upgraded) |
 | 2026-09-19 | agent-runtime | `5961397` | `npx tsc --noEmit`; `npm test` green (90 tests) — vendored v0.8.0 v2 contracts, canonical message model, token estimator |
+| 2026-09-19 | agent-runtime | `5554602` | `npm test` green (103 tests) — session.v2 durable client (real gRPC round trip over the vendored contract) and the durable request lifecycle; PR CI green |
 
 Additional results are appended when the matching checklist item is complete.
 
