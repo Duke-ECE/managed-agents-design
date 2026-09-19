@@ -143,10 +143,11 @@ record exactly what is still missing.
 Telemetry: `src/telemetry.ts` records compactions (token reduction derived from
 before/after, duration, checkpoint id, covered-through sequence, source
 revision, summarizer model, prompt version), lease conflicts, acknowledged write
-latency and message counts, and hydration failures — one JSON object per line,
-built from explicit field lists so no path can attach message content, a prompt,
-or a credential. Wired into compaction and lease loss; write latency is
-available but not yet emitted from `DurableExecution`.
+latency and message counts with their outcome (a refused write is measured too,
+so a slow failure is distinguishable from a slow success), and hydration
+failures — one JSON object per line, built from explicit field lists so no path
+can attach message content, a prompt, or a credential. Wired into compaction,
+lease loss, and both durable writes.
 
 Partial evidence: `src/canonical.ts`, `src/tokens.ts`, `src/durable-client.ts`,
 `src/durable-execution.ts`, `src/compaction.ts`, `src/runtime-events.ts`, and
@@ -283,6 +284,7 @@ requirement can be marked Completed without relying on uncommitted local state.
 | 2026-09-19 | managed-agents-backend | `1e75113` | `gofmt -l .` clean; `go build ./...`; `go vet ./...`; `go test ./...`; `./scripts/check.sh` — PATCH refused uniformly, mutation path removed, row verified untouched |
 | 2026-09-19 | managed-agents-backend | `bdfc8d8` | `gofmt -l .` clean; `go build ./...`; `go vet ./...`; `go test ./...`; `./scripts/check.sh` — request identity generation, validation, and deterministic hashing; the session slice's first unit tests |
 | 2026-09-19 | managed-agents-backend | `323143b` | Same gates green — archived-template admission refused (410) before any runtime or session-manager call, with archived reads still available |
+| 2026-09-19 | agent-runtime | `045cb90` | `npm test` green (133 tests) — durable-write latency and outcome emitted from a finally block, so refused writes are measured |
 | 2026-09-19 | agent-runtime | `d5bfcc2` | `npm test` green (131 tests) — structured telemetry with a credential/body-free record shape |
 | 2026-09-19 | agent-runtime | `c8580ec` | `npm test` green (127 tests) — tool-boundary persistence verified through the handler (assistant call before dispatch, result before the next model call, link by original id) |
 
