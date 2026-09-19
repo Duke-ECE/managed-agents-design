@@ -326,7 +326,18 @@ admission is not yet race-safe because session creation still runs on v1.
 - [ ] Run long-session tests that trigger between-request and mid-request
   compaction, then verify deterministic hydration after restart.
 - [ ] Verify owner isolation, service-token paths, RLS denial, credential
-  non-disclosure, and log/fixture secret scanning.
+  non-disclosure, and log/fixture secret scanning. Verified: the database suite
+  asserts on real Postgres that RLS is enabled with no anon/authenticated
+  policies on every service-owned table and that the transaction functions are
+  executable by the service role alone; session-manager unit and integration
+  tests cover owner-scoped reads and writes, cross-user denial, and the
+  token-only paths; the backend asserts the resolved API key appears nowhere in
+  the frozen configuration; and both services' `check.sh` now scans *every*
+  committed file — not just manifests, which could not see a key pasted into
+  source or a fixture — for OpenAI-, Supabase-, Google-, and GitHub-shaped
+  literals, passing on the tree as it stands. What is not covered: a scan of
+  emitted log lines for message bodies, which is enforced structurally in the
+  telemetry record shape rather than checked.
 - [ ] Define the development-data migration decision and rehearse rollback with
   checkpoint-aware binaries before deployment.
 - [ ] Record every merged PR, pinned version, deployment, smoke test, deviation,
@@ -398,6 +409,8 @@ requirement can be marked Completed without relying on uncommitted local state.
 | 2026-09-19 | managed-agents-backend | `e0af002` | AGENTS.md documents the clone/archive lifecycle, owner-only and platform-read-only rules, and the admission revalidation (including that resume deliberately does not re-check) |
 | 2026-09-19 | managed-agents-backend | `aea65bc` | `gofmt -l .` clean; `go build ./...`; `go vet ./...`; `go test ./...` (10 packages); `./scripts/check.sh` — hard deletion retired across route, handler, rule, port, and adapter |
 | 2026-09-19 | managed-agents-backend | `6a67872` | `gofmt -l .` clean; `go build ./...`; `go vet ./...`; `go test ./...` (10 packages); `./scripts/check.sh` — cancellation independent of admission, refusal reported as a conflict |
+| 2026-09-19 | session-manager | `0005144` | Secret scan widened to every committed file; `./scripts/check.sh` green |
+| 2026-09-19 | managed-agents-backend | `320b3f2` | Secret scan widened to every committed file; `./scripts/check.sh` green |
 | 2026-09-19 | managed-agents-frontend | `11f6032` | `npm run build` green — cancel offered for a turn running elsewhere |
 | 2026-09-19 | managed-agents-backend | `b8c6872` | Guide updated: no delete route documented |
 | 2026-09-19 | managed-agents-backend | `45671f1` | Guide updated: no delete route, PATCH described as a uniform immutability refusal |
