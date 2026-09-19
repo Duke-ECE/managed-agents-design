@@ -505,6 +505,20 @@ They survived unit testing because those tests either inject the checkpoint
 publisher directly (so no real guard is validated) or build the context shape by
 hand (so the omission is invisible). A regression test now pins the guard hash.
 
+**Checkpoint-aware hydration after a restart.** The same small-window session was
+allowed to publish a checkpoint (`covered_through_seq` 1), the runtime was then
+killed and started again as a fresh process, and a new turn was run. The new
+process logged `hydrated durable session … with 3 canonical messages` — the
+retained post-cutoff set, not the whole history — and its model call carried the
+checkpoint summary, confirmed by reading the prompt the provider actually
+received: the `[Earlier conversation summary]` block was present and contained the
+text the summarizer had produced in the *previous* process. The turn completed at
+revision 9.
+
+That is the property the rollback story depends on: a restarted binary hydrates
+from durable state plus the active checkpoint, so disabling or losing compaction
+does not lose context.
+
 **Not verified by these runs**, and therefore not claimed: a replica *taking over*
 the orphaned turn's lease to finish it (the run terminated it through the owner's
 cancel instead), end and delete, and template archive/clone — the last of which
