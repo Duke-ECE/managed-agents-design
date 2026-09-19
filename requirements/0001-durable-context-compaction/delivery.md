@@ -352,6 +352,7 @@ requirement can be marked Completed without relying on uncommitted local state.
 | 2026-09-19 | agent-runtime | `9570606` | `npm test` green (126 tests) — handler end-to-end tests (completed turn, reconnect dedup, failed model call) over the real pi loop with a scripted stream |
 | 2026-09-19 | managed-agents-backend | `5b6d2bb` | `gofmt -l .` clean; `go build ./...`; `go vet ./...`; `go test ./...`; `./scripts/check.sh` — clone/archive rules, adapter, HTTP routes, and error mapping covered |
 | 2026-09-19 | managed-agents-frontend | `e1f01fc` | `npm run build` green — durable done frame consumed (per-call aggregate normalized to a turn total) |
+| 2026-09-19 | managed-agents-frontend | `10f0770` | `npm run build` green — interrupted turns stay marked across a reload by reconciling the canonical record on seq |
 | 2026-09-19 | managed-agents-frontend | `85bf519` | `npm run build` green — durable request state read on session open and shown in plain terms; absent when session.v2 is unavailable |
 | 2026-09-19 | managed-agents-frontend | `3b8aff5` | `npm run build` green — resend re-drives an interrupted turn under its original identity and explains a deduplicated replay instead of showing an empty reply |
 | 2026-09-19 | managed-agents-frontend | `f9c355a` | `npm run build` green — request identity generated, sent, and stored per turn (replay affordance deliberately not shipped; see the item note) |
