@@ -229,8 +229,12 @@ structured history, and archived-template admission are not.
   conflicts) maps to 409 and INVALID_ARGUMENT to 400, where both previously
   surfaced as 500, and the mapping is pinned by a table test. UNAUTHENTICATED
   deliberately stays 500 so an upstream service-token misconfiguration cannot
-  tell a browser to re-authenticate. The SSE half and the busy-session
-  cancellation path wait for the v2 chat orchestration.
+  tell a browser to re-authenticate. The SSE half is done too: a failed chat
+  stream now reports whether it is worth retrying, derived from the gRPC code
+  (UNAVAILABLE, ABORTED, DEADLINE_EXCEEDED, RESOURCE_EXHAUSTED are retryable)
+  instead of the hardcoded false that made every transient failure look
+  permanent. The busy-session cancellation path waits for the v2 chat
+  orchestration.
 - [x] Pass gofmt, build, vet, unit tests, and whole-service integration tests.
   `gofmt -l .` clean, `go build ./...`, `go vet ./...`, `go test ./...`, and
   `./scripts/check.sh` green at the template-lifecycle commits (`5b6d2bb`,
@@ -310,6 +314,7 @@ requirement can be marked Completed without relying on uncommitted local state.
 | 2026-09-19 | managed-agents-frontend | `27e37c9` | `npm run build` (`tsc -b && vite build`) green — Edit state removed (type-enforced), own templates offer Clone/Archive only |
 | 2026-09-19 | managed-agents-frontend | `db1b5fe` | `npm run build` (`tsc -b && vite build`) green — archived templates excluded from new-chat selection, still resolved for display |
 | 2026-09-19 | managed-agents-frontend | `a30be68` | `npm run build` (`tsc -b && vite build`) green — archive replaces delete on the Agents page, archived state surfaced |
+| 2026-09-19 | managed-agents-backend | `a73183b` | `gofmt -l .` clean; `go build ./...`; `go vet ./...`; `go test ./...` (10 packages); `./scripts/check.sh` — SSE stream retryability derived from the gRPC code, pinned by a table test |
 | 2026-09-19 | managed-agents-backend | `f698682` | `gofmt -l .` clean; `go build ./...`; `go vet ./...`; `go test ./...` (10 packages); `./scripts/check.sh` — ABORTED/INVALID_ARGUMENT mapping pinned by a table test |
 | 2026-09-19 | managed-agents-backend | `e40ef01` | `gofmt -l .` clean; `go build ./...`; `go vet ./...`; `go test ./...` (10 packages); `./scripts/check.sh` — structured history route, ownership pass-through, not-implemented and bad-window paths covered; protos pinned to v0.8.0 |
 | 2026-09-19 | managed-agents-backend | `1e75113` | `gofmt -l .` clean; `go build ./...`; `go vet ./...`; `go test ./...`; `./scripts/check.sh` — PATCH refused uniformly, mutation path removed, row verified untouched |
