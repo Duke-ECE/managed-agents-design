@@ -410,14 +410,93 @@ Additional results are appended when the matching checklist item is complete.
 - managed-agents-frontend: [Duke-ECE/managed-agents-frontend#1](https://github.com/Duke-ECE/managed-agents-frontend/pull/1)
   — phase 5 archive UI.
 - Release tags: protos `v0.8.0` (`f3db971`) — `session/v2` + `runtime/v2`
-  contracts; the immutable tag consumers pin.
+  contracts; the immutable tag consumers pin. No service has been tagged or
+  deployed for this requirement.
+- Unmerged by design, because merging `main` deploys and the plan puts cutover in
+  phase 6: session-manager, agent-runtime, and managed-agents-backend each change
+  a contract or a deploy path. All four PRs have green CI.
 
 ## Cutover and rollback
 
-Finalize before deployment. Require a checkpoint-aware rollback binary, explicit
-development-data handling, and successful multi-replica failure tests.
-Disabling compaction must preserve hydration of existing checkpoints.
+Planned, not rehearsed. The requirement's code is complete and green on its
+branches, but nothing is deployed and no failure test has been run against a
+multi-service environment, so this section is the plan plus its open items rather
+than evidence.
+
+### Cutover order
+
+1. Apply the session-manager migrations to Supabase (`supabase db push`). They
+   are additive: every existing `agent_sessions` / `agent_messages` row keeps its
+   identity, legacy transcript rows survive as `format_version = 0` with
+   `last_seq` backfilled, and no row is rewritten or deleted. Nothing reads the
+   new tables until step 2, so applying them is inert.
+2. Flip `CANONICAL_SESSIONS=1` on the backend. That single switch turns on
+   canonical admission (the frozen configuration), the durable chat path on
+   `runtime.v2`, and canonical request identity, together. Canonical *reads* are
+   already on.
+3. Deploy the frontend. It consumes both contracts, so it is safe before or after
+   the flip; it must be deployed with or before step 2 only if the v2 `done`
+   frame's `aggregate_usage` shape is to render, which the boundary normalizer
+   already handles.
+
+The proto tag `v0.8.0` is the contract every consumer pins, and the session-manager
+migration is the only schema change.
+
+### Development data
+
+**Decision: retain, do not reset.** The migration was written to preserve existing
+development histories, and it does — legacy rows stay readable through the v1
+routes and are returned by the canonical routes as `format_version = 0` messages.
+A destructive reset is not required by this design and would need its own approved
+execution plan. The one thing history cannot recover is the original tool-call
+ordering of legacy turns, which was never recorded; those turns keep their stored
+order.
+
+### Rollback
+
+Unsetting `CANONICAL_SESSIONS` reverts admission and chat to the v1 path in one
+step, with no data loss: the canonical tables are additional state, not a
+replacement for the v1 transcript, so sessions created canonically remain
+readable through the v1 routes (their transcript turns are durable messages).
+Disabling compaction must preserve checkpoint-aware hydration — the runtime reads
+the active checkpoint on hydration and only compacts when the budget check fires,
+so an operator disabling it leaves existing checkpoints hydrating as before.
+
+A checkpoint-aware rollback **binary** is still required and has not been built or
+rehearsed. Until it is, a rollback at the binary level would lose checkpoint
+awareness even though it would not lose data.
 
 ## Outcome and deviations
 
-Pending implementation.
+The requirement is implemented across five repositories with green gates in each
+and green CI on every open PR, and it is **not delivered**: nothing is deployed,
+no multi-service failure test has been run, and the cutover has not been
+rehearsed. The evidence table above records what each commit verified; what
+follows is what is deliberately not done.
+
+Deviations from the design as written:
+
+- **`credential_ref` is empty.** The frozen configuration records a reference
+  rather than a secret, which is the design's shape, but no private credential
+  storage exists yet, so there is nothing to reference; the runtime supplies the
+  key from its own environment. The design lists credential storage as an open
+  implementation detail.
+- **Model limits are constants** (`128000`/`16384`) mirroring what the runtime's
+  adapter uses today, not per-model limits. The design explicitly warns against a
+  universal 128k constant; recording the values actually in force is the honest
+  interim, and per-model limits belong with the templates.
+- **Executor-level tool reconciliation does not exist.** The design allows
+  reconciling an unknown tool outcome through an executor's status or
+  idempotency; no tool executor is wired yet, so the runtime detects and reports
+  an unknown outcome and requires an explicit retry instead.
+- **Compaction races are guarded, not concurrency-tested.** Parent, config-hash,
+  revision, and lease guards are unit-tested; two publishers racing is not.
+- **The v1 transcript route remains.** The frontend renders canonical state where
+  it matters (streaming, request state, incomplete turns) but still loads history
+  through the v1 route. The design asks for a coordinated cutover rather than a
+  permanent compatibility projection, so retiring it belongs with the cutover.
+
+What is left to call this complete: run the multi-service integration and
+multi-replica failure tests in an environment where the three services run
+together, build and rehearse the checkpoint-aware rollback binary, and execute the
+cutover in the order above.
