@@ -41,37 +41,57 @@ local module replacement, which must never be committed.
 
 ### Phase 1: Durable storage foundation
 
-- [ ] Add a non-destructive migration for canonical message fields, request-root
+- [x] Add a non-destructive migration for canonical message fields, request-root
   state, session revisions, fenced leases, immutable session configuration,
   checkpoints, and idempotency receipts.
-- [ ] Add and validate indexes for latest-window history, request history,
+- [x] Add and validate indexes for latest-window history, request history,
   request deduplication, and one nonterminal request per session.
-- [ ] Add short Postgres transaction functions for request admission, lease
+- [x] Add short Postgres transaction functions for request admission, lease
   operations, incremental append, terminal completion, cancellation, and
   checkpoint publication.
-- [ ] Verify migrations from both an empty database and the existing v1 schema
+- [x] Verify migrations from both an empty database and the existing v1 schema
   with retained rows.
-- [ ] Verify RLS remains enabled with no anon/authenticated policies on every
+- [x] Verify RLS remains enabled with no anon/authenticated policies on every
   service-owned table.
 
 Exit criterion: all durable state transitions are atomic inside Postgres and can
-be invoked through PostgREST without a read-max-write sequence race.
+be invoked through PostgREST without a read-max-write sequence race. Met: every
+transition runs in one transaction function; `scripts/verify-db.sh` exercises the
+constraints, indexes, locks, fencing, revision races, RLS, and function
+privileges on real Postgres.
 
 ### Phase 2: session-manager v2
 
-- [ ] Add v2 domain types and validation without importing transport or storage.
-- [ ] Add a behavior-parity in-memory store for the expanded persistence port.
-- [ ] Implement PostgREST adapters for transactional RPCs and cursor reads.
-- [ ] Register `session.v2.SessionService` alongside v1 during migration.
-- [ ] Enforce owner-versus-service-token authorization and credential redaction.
-- [ ] Cover deduplication, hash conflicts, request state transitions, revision
+- [x] Add v2 domain types and validation without importing transport or storage.
+- [x] Add a behavior-parity in-memory store for the expanded persistence port.
+- [x] Implement PostgREST adapters for transactional RPCs and cursor reads.
+- [x] Register `session.v2.SessionService` alongside v1 during migration.
+- [x] Enforce owner-versus-service-token authorization and credential redaction.
+- [x] Cover deduplication, hash conflicts, request state transitions, revision
   conflicts, lease fencing/expiry, immutable messages, safe checkpoints,
   pagination, end/delete races, and cancellation with unit tests.
-- [ ] Pass `scripts/check.sh`, gofmt, build, vet, unit tests, and whole-service
+- [x] Pass `scripts/check.sh`, gofmt, build, vet, unit tests, and whole-service
   integration tests using Go 1.25 with `GOTOOLCHAIN=local`.
 
 Exit criterion: session-manager is a complete privilege and persistence boundary
-for the v2 state machine, while v1 remains usable for controlled migration.
+for the v2 state machine, while v1 remains usable for controlled migration. Met:
+both contract versions are registered over one store; the v2 rules, the
+transaction functions, and the adapter are covered at unit, adapter, transport,
+and whole-service levels.
+
+Deviations and open items:
+
+- Between-request compaction publishes under the next request's lease: the
+  checkpoint's `active_request_message_id` is the new request while
+  `covered_through_seq` sits at the last completed-request boundary. Publication
+  while a session is idle is deliberately unsupported (a lease belongs to a
+  request).
+- `GetExecutionContext` returns session, frozen config, and active checkpoint
+  only; retained messages are read through `GetMessages` windowed pagination so a
+  truncated hydration can never be mistaken for a complete one.
+- Legacy v1 `system`/`config` turns have no `session.v2.MessageRole`; the
+  transport maps them to `MESSAGE_ROLE_UNSPECIFIED`. Whether to import existing
+  development histories or reset remains an open delivery item (see below).
 
 ### Phase 3: agent-runtime durable execution
 
@@ -164,6 +184,8 @@ requirement can be marked Completed without relying on uncommitted local state.
 | --- | --- | --- | --- |
 | 2026-09-19 | protos | `8202acb` | `buf lint`; `buf breaking --against '.git#branch=main,subdir=proto'`; `buf generate`; `GOTOOLCHAIN=local go build ./...` |
 | 2026-09-19 | protos | `f3db971` | PR CI green (lint, breaking, generation drift, `go build`); `main` fast-forwarded; `v0.8.0` tagged and pushed |
+| 2026-09-19 | session-manager | `70d87f7` | Migrations applied to Postgres 16 from an empty database and from the v1 schema with retained rows; `supabase/tests/durable_context.sql` asserts constraints, indexes, locks, lease fencing, revision races, RLS, and function privileges via `scripts/verify-db.sh` |
+| 2026-09-19 | session-manager | `07d5209` | `gofmt -l .` clean; `go build ./...`; `go vet ./...`; `go test ./...`; `go test -race ./...`; `./scripts/check.sh`; `DATABASE_URL=... ./scripts/verify-db.sh` (fresh + upgraded) |
 
 Additional results are appended when the matching checklist item is complete.
 
@@ -171,6 +193,8 @@ Additional results are appended when the matching checklist item is complete.
 
 - protos: [Duke-ECE/protos#1](https://github.com/Duke-ECE/protos/pull/1) — merged
   (`f3db971`, merged 2026-09-19).
+- session-manager: [Duke-ECE/session-manager#1](https://github.com/Duke-ECE/session-manager/pull/1)
+  — phases 1 and 2.
 - Release tags: protos `v0.8.0` (`f3db971`) — `session/v2` + `runtime/v2`
   contracts; the immutable tag consumers pin.
 
