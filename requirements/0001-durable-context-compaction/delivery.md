@@ -167,7 +167,12 @@ structured history, and archived-template admission are not.
 
 - [ ] Pin the released proto tag and switch session/runtime orchestration to v2.
 - [ ] Generate or accept a stable client request ID and deterministic request hash
-  for every chat submission and reconnect.
+  for every chat submission and reconnect. The primitive exists and is unit
+  tested (`internal/session/identity.go`): a caller-supplied URL-safe id is
+  honoured after validation so a reconnect can replay an in-flight id, a
+  `req-<hex>` one is generated otherwise, and `RequestHash` binds the id to the
+  exact content deterministically. It is deliberately not wired yet — nothing
+  consumes it until the chat path moves to `runtime.v2`.
 - [ ] Expose structured message history and request execution state over HTTP.
 - [ ] Replace template mutation/deletion with create, clone, and archive; reject
   new sessions from archived templates while preserving existing sessions.
@@ -253,6 +258,7 @@ requirement can be marked Completed without relying on uncommitted local state.
 | 2026-09-19 | agent-runtime | `5b23f77` | `npm test` green (125 tests) — `runtime.v2.AgentService` handler registered alongside v1; PR CI green |
 | 2026-09-19 | agent-runtime | `9570606` | `npm test` green (126 tests) — handler end-to-end tests (completed turn, reconnect dedup, failed model call) over the real pi loop with a scripted stream |
 | 2026-09-19 | managed-agents-backend | `5b6d2bb` | `gofmt -l .` clean; `go build ./...`; `go vet ./...`; `go test ./...`; `./scripts/check.sh` — clone/archive rules, adapter, HTTP routes, and error mapping covered |
+| 2026-09-19 | managed-agents-backend | `bdfc8d8` | `gofmt -l .` clean; `go build ./...`; `go vet ./...`; `go test ./...`; `./scripts/check.sh` — request identity generation, validation, and deterministic hashing; the session slice's first unit tests |
 | 2026-09-19 | managed-agents-backend | `323143b` | Same gates green — archived-template admission refused (410) before any runtime or session-manager call, with archived reads still available |
 | 2026-09-19 | agent-runtime | `c8580ec` | `npm test` green (127 tests) — tool-boundary persistence verified through the handler (assistant call before dispatch, result before the next model call, link by original id) |
 
