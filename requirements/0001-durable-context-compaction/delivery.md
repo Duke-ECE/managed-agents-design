@@ -95,59 +95,59 @@ Deviations and open items:
 
 ### Phase 3: agent-runtime durable execution
 
-In progress. Completed items are checked; the remainder is being implemented on
-the `docs/link-compaction-design` branch behind
-[Duke-ECE/agent-runtime#1](https://github.com/Duke-ECE/agent-runtime/pull/1).
+Implemented on the `docs/link-compaction-design` branch behind
+[Duke-ECE/agent-runtime#1](https://github.com/Duke-ECE/agent-runtime/pull/1);
+items whose listed verification has actually passed are checked, and the rest
+record exactly what is still missing.
 
 - [x] Pin the released proto tag and sync vendored proto files through the
   repository script.
 - [ ] Replace turn-end fire-and-forget persistence with request admission and
-  acknowledged incremental durable boundaries.
+  acknowledged incremental durable boundaries. Implemented: the v2 handler admits
+  through `BeginRequest`, persists through `beforeToolCall` / `afterToolCall`, and
+  finishes once. Handler-level end-to-end verification (a request surviving a
+  simulated crash at each boundary) is missing, so the item is not checked.
 - [ ] Acquire, renew, and fence a 90-second execution lease; stop writes and
-  inference immediately after lease loss.
-- [ ] Preserve ordered text/tool blocks, stable tool-call IDs, result links,
-  provider continuation metadata, and one usage record per model call.
-- [ ] Assemble model context deterministically from frozen config, active
-  checkpoint, and retained canonical messages.
+  inference immediately after lease loss. Implemented and unit-tested in
+  `DurableExecution`; not yet exercised through the handler.
+- [x] Preserve ordered text/tool blocks, stable tool-call IDs, result links,
+  provider continuation metadata, and one usage record per model call. Covered by
+  the canonical model, the client wire round trip, and the handler's per-model-call
+  usage.
+- [x] Assemble model context deterministically from frozen config, active
+  checkpoint, and retained canonical messages. Implemented with backwards
+  pagination that stops at the checkpoint cutoff.
 - [x] Add a model-aware token estimator and check the input budget before every
-  model call, including tool-loop calls. The estimator and budget check exist
-  (`src/tokens.ts`) with prefix reuse and baseline invalidation; wiring it into
-  the loop is part of the remaining work.
+  model call, including tool-loop calls. `prepareNextTurnWithContext` checks before
+  each model call; the estimator is unit-tested.
 - [ ] Implement safe-cut compaction, summary generation, compare-and-publish,
-  mid-request continuation, and summary timeout/failure behavior. The compaction
-  engine exists (`src/compaction.ts`): safe-cut selection, historical-context
-  summary prompt, deadline-bounded generation with one retry, typed failures, and
-  publish through the caller's lease leaving the old checkpoint active on any
-  failure. Wiring it into the tool loop's `prepareNextTurnWithContext` and
-  mid-request continuation remain.
+  mid-request continuation, and summary timeout/failure behavior. Implemented and
+  unit-tested (`src/compaction.ts`) and wired into `prepareNextTurnWithContext`,
+  which hands the compacted context back for the same request; no handler-level
+  test yet.
 - [ ] Reconcile restart/cancellation behavior without replaying completed tools.
+  Cancellation and reconnect-dedup are implemented; reconciling a tool call whose
+  outcome is unknown after a crash is not.
 - [ ] Cover crash boundaries, duplicate delivery, stale leases, compaction races,
-  long tool output, missing provider usage, and cache invalidation in tests.
-- [ ] Pass TypeScript strict build and all Node tests.
+  long tool output, missing provider usage, and cache invalidation in tests. Unit
+  coverage exists for stale leases, duplicate delivery, compaction failures, and
+  usage reporting; crash-boundary and long-output cases do not.
+- [x] Pass TypeScript strict build and all Node tests. `npm test` green (125 tests)
+  under `tsc --strict`.
 
-Partial evidence: `src/canonical.ts` (versioned platform message model, block and
-link validation, pi conversion with links by original tool-call id, incomplete
-assistant output excluded from context), `src/tokens.ts` (input budget,
-trigger/target ratios, prefix reuse, conservative fallback), `src/durable-client.ts`
-(awaited session.v2 client with wire conversion and retryable-vs-conflict error
-classification), and `src/durable-execution.ts` (admission/dedup, renewable fenced
-lease, acknowledged batches, lease-loss abort, single terminal write), and
-`src/compaction.ts` (safe-cut selection, summary generation with a deadline and
-one retry, compare-and-publish through the lease, typed failures), and
-`src/runtime-events.ts` (pure translation of agent events into runtime.v2 stream
-payloads with per-model-call usage). Tested by
-`test/canonical.test.ts`, `test/tokens.test.ts`, `test/durable-client.test.ts`
-(real gRPC server over the vendored contract), `test/durable-execution.test.ts`,
-`test/compaction.test.ts`, and `test/runtime-events.test.ts` — `npm test` green
-(123 tests) at `842d520`.
-Remaining: wiring these into `runtime.v2.AgentService` through pi's
-`beforeToolCall`/`afterToolCall`/`prepareNextTurnWithContext` hooks,
-deterministic hydration from the frozen configuration and active checkpoint,
-transfer of the v1 transcript fallback, and mid-request continuation. A first
-attempt at the handler was written and discarded rather than committed: it had a
-`require` call in ESM, an undeclared live-session field, and a compaction call
-with an empty message list, so it could not have been verified within the round.
-The handler is the next unit of work.
+Partial evidence: `src/canonical.ts`, `src/tokens.ts`, `src/durable-client.ts`,
+`src/durable-execution.ts`, `src/compaction.ts`, `src/runtime-events.ts`, and
+`src/durable-runtime.ts` (the `runtime.v2.AgentService` handler, registered
+alongside v1 and failing closed without a session-manager), with matching tests.
+`npm test` green (125 tests) at `5b23f77`.
+
+Known gaps carried forward: the handler has no end-to-end test because the model
+stream function is constructed inside `liveSession` and needs an injection seam;
+a first attempt at the handler was discarded rather than committed after review
+found a `require` in ESM, an undeclared live-session field, and an empty
+compaction message list; and the frozen configuration's `credential_ref` is not
+resolvable because private credential storage does not exist yet, so the process
+`LLM_API_KEY` supplies the secret in the meantime.
 
 Exit criterion: a request can survive process loss at every durable boundary and
 long contexts compact without overwriting source messages.
@@ -225,6 +225,7 @@ requirement can be marked Completed without relying on uncommitted local state.
 | 2026-09-19 | agent-runtime | `5554602` | `npm test` green (103 tests) — session.v2 durable client (real gRPC round trip over the vendored contract) and the durable request lifecycle; PR CI green |
 | 2026-09-19 | agent-runtime | `1c0f55b` | `npm test` green (114 tests) — safe-cut compaction, summary deadline/retry/failure, compare-and-publish |
 | 2026-09-19 | agent-runtime | `842d520` | `npm test` green (123 tests) — pure agent-event → runtime.v2 stream translation |
+| 2026-09-19 | agent-runtime | `5b23f77` | `npm test` green (125 tests) — `runtime.v2.AgentService` handler registered alongside v1; PR CI green |
 
 Additional results are appended when the matching checklist item is complete.
 
