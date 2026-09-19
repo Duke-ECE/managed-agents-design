@@ -279,15 +279,14 @@ admission is not yet race-safe because session creation still runs on v1.
   not saved" until the done frame). The request-level states are not: the
   console does not yet read the root's execution status, which the durable
   contract exposes on the message.
-- [ ] Generate and reuse stable request IDs across SSE reconnects. The client
+- [x] Generate and reuse stable request IDs across SSE reconnects. The client
   generates an id per submission, sends it as `X-Client-Request-Id`, and records
-  the id the backend confirmed on the turn, so a reconnect can replay it and be
-  deduplicated. What is missing is the affordance that replays it: a resend with
-  the same id is deduplicated by session-manager, and the runtime answers with
-  the existing request's state without re-running anything, so the turn may come
-  back running or completed with no new text. Presenting that honestly ("the turn
-  was already accepted") is a UI decision that has not been made, and a button
-  producing an empty bubble would be worse than none.
+  the id the backend confirmed on the turn. The partial-turn marker offers a
+  resend that re-drives the same bubble under that identity, so session-manager
+  recognises the request and the runtime answers with its existing state instead
+  of running the turn twice. A deduplicated resend returns no new output, so the
+  bubble says what happened — the turn was accepted, it is not a failure, and the
+  transcript already holds it — rather than showing an empty reply.
 - [x] Replace Edit/Delete template actions with Clone/Archive and filter archived
   templates from the default new-session picker. Delete became Archive (a
   non-destructive confirm that keeps the row in place and shows an Archived
@@ -349,6 +348,7 @@ requirement can be marked Completed without relying on uncommitted local state.
 | 2026-09-19 | agent-runtime | `9570606` | `npm test` green (126 tests) — handler end-to-end tests (completed turn, reconnect dedup, failed model call) over the real pi loop with a scripted stream |
 | 2026-09-19 | managed-agents-backend | `5b6d2bb` | `gofmt -l .` clean; `go build ./...`; `go vet ./...`; `go test ./...`; `./scripts/check.sh` — clone/archive rules, adapter, HTTP routes, and error mapping covered |
 | 2026-09-19 | managed-agents-frontend | `e1f01fc` | `npm run build` green — durable done frame consumed (per-call aggregate normalized to a turn total) |
+| 2026-09-19 | managed-agents-frontend | `3b8aff5` | `npm run build` green — resend re-drives an interrupted turn under its original identity and explains a deduplicated replay instead of showing an empty reply |
 | 2026-09-19 | managed-agents-frontend | `f9c355a` | `npm run build` green — request identity generated, sent, and stored per turn (replay affordance deliberately not shipped; see the item note) |
 | 2026-09-19 | managed-agents-frontend | `5adf617` | `npm run build` green — tool results rendered from either contract via a boundary normalizer |
 | 2026-09-19 | managed-agents-frontend | `27e37c9` | `npm run build` (`tsc -b && vite build`) green — Edit state removed (type-enforced), own templates offer Clone/Archive only |
