@@ -213,21 +213,17 @@ structured history, and archived-template admission are done.
   transcript. The session slice gained a `CanonicalStore` port, attached through
   a functional option so the existing call sites were untouched, and a missing
   v2 client answers not-implemented rather than an empty history.
-- [ ] Replace template mutation/deletion with create, clone, and archive; reject
+- [x] Replace template mutation/deletion with create, clone, and archive; reject
   new sessions from archived templates while preserving existing sessions.
-  Clone and archive are implemented end to end (migration, domain rules, store
-  port, PostgREST adapter, HTTP routes, tests) per decision D001: templates are
-  immutable, cloning copies configuration into a new private identity, and
-  archiving is owner-only, idempotent, and content-preserving. Admission
-  revalidates archival server-side: a new session from an archived template is
-  refused before the runtime or session-manager is touched, while resume is
-  deliberately not gated so existing sessions keep running, and the template
-  stays readable and cloneable. Editing is now genuinely impossible rather than
-  merely discouraged: PATCH returns a uniform 400 (`ErrImmutableMutation`) that
-  is produced before any ownership lookup, so it cannot probe another user's
-  templates, and the mutation path was removed from the domain, the store port,
-  the adapter, and the transport rather than left unreachable. `DELETE` and the
-  frontend's Edit action remain; both are the coordinated API+UI half.
+  Creation, clone, and archive are the whole write surface: PATCH is refused with
+  a uniform 400 that is produced before any ownership lookup (so it cannot probe
+  whether an id exists) and the delete route, handler, service rule, store port
+  method, and PostgREST adapter method are gone rather than left unreachable.
+  The UI offers Clone and Archive for an own template and View and Clone for a
+  platform or archived one, and archived templates are excluded from the
+  new-chat picker. Admission revalidates archival (410 before the runtime or
+  session-manager is touched) while resume deliberately does not, so a session
+  that already resolved a template keeps running.
 - [ ] Resolve and persist one frozen session configuration at admission, using
   credential references rather than transcript secrets. Implemented behind
   `CANONICAL_SESSIONS` (default off): one session.v2 call writes the session
@@ -390,6 +386,9 @@ requirement can be marked Completed without relying on uncommitted local state.
 | 2026-09-19 | agent-runtime | `ca1c335` | Awaited session.v2 client with wire conversion and aborted-vs-conflict classification; the round trip over the vendored contract caught a real bug (the draft completeness field is status, not message_status) |
 | 2026-09-19 | agent-runtime | `5303b2d` | Exported the wire block decoder the v2 handler boundary needs |
 | 2026-09-19 | managed-agents-backend | `e0af002` | AGENTS.md documents the clone/archive lifecycle, owner-only and platform-read-only rules, and the admission revalidation (including that resume deliberately does not re-check) |
+| 2026-09-19 | managed-agents-backend | `aea65bc` | `gofmt -l .` clean; `go build ./...`; `go vet ./...`; `go test ./...` (10 packages); `./scripts/check.sh` — hard deletion retired across route, handler, rule, port, and adapter |
+| 2026-09-19 | managed-agents-backend | `45671f1` | Guide updated: no delete route, PATCH described as a uniform immutability refusal |
+| 2026-09-19 | managed-agents-frontend | `f73c048` | `npm run build` green — the dead `deleteAgent` client removed |
 | 2026-09-19 | managed-agents-backend | `d4c5b17` | Durable chat streamed over SSE under the shared event names, with the request identity echoed before the stream and a rejected submission answered as a real status code |
 
 Additional results are appended when the matching checklist item is complete.
