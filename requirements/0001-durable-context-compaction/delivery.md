@@ -209,10 +209,13 @@ admission is not yet race-safe because session creation still runs on v1.
   templates from the default new-session picker. Archive replaces the
   destructive Delete action: the Agents page archives with a non-destructive
   confirm, keeps the row in place, shows an Archived badge, and offers View and
-  Clone for a retired template. Edit remains deliberately (retiring it means
-  retiring the backend PATCH endpoint in the same coordinated change), and the
-  new-chat picker does not yet filter archived templates — the backend refuses
-  them at admission, so that is a UX gap rather than a correctness hole.
+  Clone for a retired template. The new-chat picker derives a selectable list
+  that excludes archived templates (options, default selection, and the
+  no-usable-agent check) while the full list still resolves an open session's
+  agent_id to a display name, so an archived template a live session already
+  resolved keeps its badge. Edit remains deliberately: retiring it means
+  retiring the backend PATCH endpoint in the same coordinated change, so that
+  half of the item is not done.
 - [ ] Preserve cursor pagination, cache revalidation, cancellation, and history
   navigation under the v2 response schema.
 - [ ] Pass the TypeScript and Vite production build.
@@ -264,6 +267,7 @@ requirement can be marked Completed without relying on uncommitted local state.
 | 2026-09-19 | agent-runtime | `5b23f77` | `npm test` green (125 tests) — `runtime.v2.AgentService` handler registered alongside v1; PR CI green |
 | 2026-09-19 | agent-runtime | `9570606` | `npm test` green (126 tests) — handler end-to-end tests (completed turn, reconnect dedup, failed model call) over the real pi loop with a scripted stream |
 | 2026-09-19 | managed-agents-backend | `5b6d2bb` | `gofmt -l .` clean; `go build ./...`; `go vet ./...`; `go test ./...`; `./scripts/check.sh` — clone/archive rules, adapter, HTTP routes, and error mapping covered |
+| 2026-09-19 | managed-agents-frontend | `db1b5fe` | `npm run build` (`tsc -b && vite build`) green — archived templates excluded from new-chat selection, still resolved for display |
 | 2026-09-19 | managed-agents-frontend | `a30be68` | `npm run build` (`tsc -b && vite build`) green — archive replaces delete on the Agents page, archived state surfaced |
 | 2026-09-19 | managed-agents-backend | `bdfc8d8` | `gofmt -l .` clean; `go build ./...`; `go vet ./...`; `go test ./...`; `./scripts/check.sh` — request identity generation, validation, and deterministic hashing; the session slice's first unit tests |
 | 2026-09-19 | managed-agents-backend | `323143b` | Same gates green — archived-template admission refused (410) before any runtime or session-manager call, with archived reads still available |
