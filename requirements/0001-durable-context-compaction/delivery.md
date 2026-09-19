@@ -317,7 +317,12 @@ admission is not yet race-safe because session creation still runs on v1.
   integration run below). Cancellation, end/delete, and template archive/clone
   were not exercised, so the item stays open.
 - [ ] Run multi-replica failure tests for runtime death, lease expiry/takeover,
-  duplicate request delivery, and stale mutation rejection.
+  duplicate request delivery, and stale mutation rejection. Run and verified:
+  concurrent rejection while a session executes, replica death leaving the root
+  durably running, lease expiry, termination of the orphan as interrupted, and
+  recovery on another replica; duplicate delivery was verified earlier. Stale
+  mutation rejection is unit-tested. A replica *taking over* the orphaned lease to
+  finish it was not exercised, so the item stays open.
 - [ ] Run long-session tests that trigger between-request and mid-request
   compaction, then verify deterministic hydration after restart.
 - [ ] Verify owner isolation, service-token paths, RLS denial, credential
@@ -441,10 +446,30 @@ The first attempt at this produced no tool frames; the fault was in the throwawa
 endpoint, which tested message content for a string when the client sends an array
 of parts. Fixing the harness produced the run above.
 
-**Not verified by these runs**, and therefore not claimed: cancellation, end and
-delete, and template archive/clone — the last of which needs the backend in the
-loop. The services were stopped after the runs; this is evidence, not a running
-environment.
+**Multi-replica failure run.** Two agent-runtime replicas (`:50055`, `:50056`)
+were pointed at one session-manager, with an endpoint that stalls when the prompt
+asks it to so a turn stays in flight.
+
+- *Concurrent rejection.* With replica A holding a live lease mid-turn, replica B
+  was refused with `FAILED_PRECONDITION: another request is already active on this
+  session`, and the durable root showed `EXECUTION_STATUS_RUNNING`. A different
+  request cannot be admitted while the session executes.
+- *Replica death.* Killing A mid-turn left the root durably `RUNNING` — the record
+  never fabricates a completion for a turn nobody finished.
+- *Lease expiry.* After the 90-second lease lapsed, the owner's `CancelRequest`
+  terminated the orphan as `EXECUTION_STATUS_INTERRUPTED` with
+  `cancellation_requested`, which is the design's rule for an unknown outcome:
+  surface it and require an explicit retry rather than guess.
+- *Recovery.* Replica B then admitted a new turn on the same session (the
+  transcript advanced to a second root), and B's hydrated context carried the
+  earlier turn — the throwaway endpoint matched text that existed only in the
+  durable history.
+
+**Not verified by these runs**, and therefore not claimed: a replica *taking over*
+the orphaned turn's lease to finish it (the run terminated it through the owner's
+cancel instead), end and delete, and template archive/clone — the last of which
+needs the backend in the loop. The services were stopped after the runs; this is
+evidence, not a running environment.
 
 Additional results are appended when the matching checklist item is complete.
 
