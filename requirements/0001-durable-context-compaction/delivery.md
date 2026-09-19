@@ -390,6 +390,7 @@ requirement can be marked Completed without relying on uncommitted local state.
 | 2026-09-19 | managed-agents-backend | `aea65bc` | `gofmt -l .` clean; `go build ./...`; `go vet ./...`; `go test ./...` (10 packages); `./scripts/check.sh` — hard deletion retired across route, handler, rule, port, and adapter |
 | 2026-09-19 | managed-agents-backend | `6a67872` | `gofmt -l .` clean; `go build ./...`; `go vet ./...`; `go test ./...` (10 packages); `./scripts/check.sh` — cancellation independent of admission, refusal reported as a conflict |
 | 2026-09-19 | managed-agents-frontend | `11f6032` | `npm run build` green — cancel offered for a turn running elsewhere |
+| 2026-09-19 | managed-agents-backend | `b8c6872` | Guide updated: no delete route documented |
 | 2026-09-19 | managed-agents-backend | `45671f1` | Guide updated: no delete route, PATCH described as a uniform immutability refusal |
 | 2026-09-19 | managed-agents-frontend | `f73c048` | `npm run build` green — the dead `deleteAgent` client removed |
 | 2026-09-19 | managed-agents-backend | `d4c5b17` | Durable chat streamed over SSE under the shared event names, with the request identity echoed before the stream and a rejected submission answered as a real status code |
