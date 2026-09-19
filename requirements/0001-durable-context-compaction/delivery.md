@@ -29,11 +29,15 @@ verification has passed. PR creation alone does not complete an item.
 - [x] Add `runtime.v2` durable request, cancellation, and structured stream
   contracts.
 - [x] Run proto lint, breaking-change detection, generation, and Go build.
-- [ ] Merge the proto PR, publish a semver tag, and record the immutable tag here.
+- [x] Merge the proto PR, publish a semver tag, and record the immutable tag here.
 
-Exit criterion: consumers can pin a reviewed v2 contract tag. Until then,
-consumer branches may test against a temporary local module replacement, which
-must never be committed.
+Contract tag: [`v0.8.0`](https://github.com/Duke-ECE/protos/releases/tag/v0.8.0)
+(`f3db971`), additive over `v0.7.0` — new `session/v2` and `runtime/v2`
+packages, no change to the v1 packages.
+
+Exit criterion: consumers can pin a reviewed v2 contract tag. Met: consumers pin
+`v0.8.0`. Until the tag existed, consumer branches could test against a temporary
+local module replacement, which must never be committed.
 
 ### Phase 1: Durable storage foundation
 
@@ -159,13 +163,16 @@ requirement can be marked Completed without relying on uncommitted local state.
 | Date | Repository | Revision | Verification |
 | --- | --- | --- | --- |
 | 2026-09-19 | protos | `8202acb` | `buf lint`; `buf breaking --against '.git#branch=main,subdir=proto'`; `buf generate`; `GOTOOLCHAIN=local go build ./...` |
+| 2026-09-19 | protos | `f3db971` | PR CI green (lint, breaking, generation drift, `go build`); `main` fast-forwarded; `v0.8.0` tagged and pushed |
 
 Additional results are appended when the matching checklist item is complete.
 
 ## Pull requests and versions
 
-- protos: [Duke-ECE/protos#1](https://github.com/Duke-ECE/protos/pull/1)
-- Release tags: pending reviewed merges.
+- protos: [Duke-ECE/protos#1](https://github.com/Duke-ECE/protos/pull/1) — merged
+  (`f3db971`, merged 2026-09-19).
+- Release tags: protos `v0.8.0` (`f3db971`) — `session/v2` + `runtime/v2`
+  contracts; the immutable tag consumers pin.
 
 ## Cutover and rollback
 
