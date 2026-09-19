@@ -206,7 +206,13 @@ admission is not yet race-safe because session creation still runs on v1.
   and provisional states without presenting unsaved output as durable.
 - [ ] Generate and reuse stable request IDs across SSE reconnects.
 - [ ] Replace Edit/Delete template actions with Clone/Archive and filter archived
-  templates from the default new-session picker.
+  templates from the default new-session picker. Archive replaces the
+  destructive Delete action: the Agents page archives with a non-destructive
+  confirm, keeps the row in place, shows an Archived badge, and offers View and
+  Clone for a retired template. Edit remains deliberately (retiring it means
+  retiring the backend PATCH endpoint in the same coordinated change), and the
+  new-chat picker does not yet filter archived templates — the backend refuses
+  them at admission, so that is a UX gap rather than a correctness hole.
 - [ ] Preserve cursor pagination, cache revalidation, cancellation, and history
   navigation under the v2 response schema.
 - [ ] Pass the TypeScript and Vite production build.
@@ -258,6 +264,7 @@ requirement can be marked Completed without relying on uncommitted local state.
 | 2026-09-19 | agent-runtime | `5b23f77` | `npm test` green (125 tests) — `runtime.v2.AgentService` handler registered alongside v1; PR CI green |
 | 2026-09-19 | agent-runtime | `9570606` | `npm test` green (126 tests) — handler end-to-end tests (completed turn, reconnect dedup, failed model call) over the real pi loop with a scripted stream |
 | 2026-09-19 | managed-agents-backend | `5b6d2bb` | `gofmt -l .` clean; `go build ./...`; `go vet ./...`; `go test ./...`; `./scripts/check.sh` — clone/archive rules, adapter, HTTP routes, and error mapping covered |
+| 2026-09-19 | managed-agents-frontend | `a30be68` | `npm run build` (`tsc -b && vite build`) green — archive replaces delete on the Agents page, archived state surfaced |
 | 2026-09-19 | managed-agents-backend | `bdfc8d8` | `gofmt -l .` clean; `go build ./...`; `go vet ./...`; `go test ./...`; `./scripts/check.sh` — request identity generation, validation, and deterministic hashing; the session slice's first unit tests |
 | 2026-09-19 | managed-agents-backend | `323143b` | Same gates green — archived-template admission refused (410) before any runtime or session-manager call, with archived reads still available |
 | 2026-09-19 | agent-runtime | `c8580ec` | `npm test` green (127 tests) — tool-boundary persistence verified through the handler (assistant call before dispatch, result before the next model call, link by original id) |
@@ -274,7 +281,9 @@ Additional results are appended when the matching checklist item is complete.
 - agent-runtime: [Duke-ECE/agent-runtime#1](https://github.com/Duke-ECE/agent-runtime/pull/1)
   — phase 3 in progress.
 - managed-agents-backend: [Duke-ECE/managed-agents-backend#1](https://github.com/Duke-ECE/managed-agents-backend/pull/1)
-  — phase 4 template lifecycle (D001), first slice.
+  — phase 4 template lifecycle (D001), request identity.
+- managed-agents-frontend: [Duke-ECE/managed-agents-frontend#1](https://github.com/Duke-ECE/managed-agents-frontend/pull/1)
+  — phase 5 archive UI.
 - Release tags: protos `v0.8.0` (`f3db971`) — `session/v2` + `runtime/v2`
   contracts; the immutable tag consumers pin.
 
