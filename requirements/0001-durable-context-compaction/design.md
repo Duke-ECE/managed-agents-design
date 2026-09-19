@@ -466,4 +466,4 @@ available throughout; cold storage is not required for this design.
 
 ## Related decisions
 
-- [Immutable Agent Templates](../../decisions/0001-immutable-agent-templates.md)
+- [Immutable Agent Templates](decisions.md#d001-immutable-agent-templates)

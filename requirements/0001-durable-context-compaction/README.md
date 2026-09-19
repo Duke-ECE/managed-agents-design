@@ -19,7 +19,7 @@ Cold storage, branching, and cross-session memory are excluded.
 
 - [Technical design](design.md)
 - [Delivery plan](delivery.md)
-- [Immutable templates decision](../../decisions/0001-immutable-agent-templates.md)
+- [Immutable templates decision](decisions.md#d001-immutable-agent-templates)
 
 ## Affected repositories
 

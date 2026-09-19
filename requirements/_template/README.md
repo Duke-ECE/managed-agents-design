@@ -1,4 +1,4 @@
-# NNNN: Iteration Title
+# NNNN: Requirement Title
 
 Status: Draft
 
@@ -16,6 +16,7 @@ List included work and exclusions.
 
 - [Design](design.md)
 - [Delivery](delivery.md)
+- [Decisions](decisions.md)
 
 ## Affected repositories
 

@@ -1,20 +1,43 @@
 # Managed Agents Design
 
-Cross-repository technical designs, architecture decisions, and iteration delivery records for the Duke-ECE managed agents platform.
+Cross-repository technical documentation for the Duke-ECE managed agents platform.
+
+## Organization
+
+One requirement has one document directory, even when implementation spans several
+code repositories. Keep its design, decision log, and delivery record together.
+
+```text
+requirements/
+├── README.md
+├── _template/
+│   ├── README.md
+│   ├── design.md
+│   ├── decisions.md
+│   └── delivery.md
+└── 0001-durable-context-compaction/
+    ├── README.md
+    ├── design.md
+    ├── decisions.md
+    └── delivery.md
+```
+
+Copy requirements/_template/ for each new requirement. Append decisions to that
+requirement's decisions.md. Other requirements may link to those decisions
+without copying them. Current implemented architecture lives in architecture/.
 
 ## Documentation boundaries
 
 - [standards](https://github.com/Duke-ECE/standards): shared engineering rules.
-- [managed-agents-docs](https://github.com/Duke-ECE/managed-agents-docs): product and user documentation.
-- This repository: designs, decisions, implementation coordination, and delivery evidence.
-- Service repositories: authoritative code, migrations, generated contracts, and operational READMEs.
+- [managed-agents-docs](https://github.com/Duke-ECE/managed-agents-docs): product documentation.
+- This repository: requirements, designs, decisions, and delivery evidence.
+- Service repositories: authoritative code, migrations, contracts, and runbooks.
 
 ## Navigation
 
-- [Iterations](iterations/README.md)
+- [Requirements and creation instructions](requirements/README.md)
+- [Complete requirement template](requirements/_template/README.md)
 - [Current architecture](architecture/README.md)
-- [Architecture decisions](decisions/README.md)
-- [Templates](templates/README.md)
 - [Agent instructions](AGENTS.md)
 
-All documents are English. This is a Markdown-only repository; there is no build or deployment.
+All documents are English. This Markdown-only repository has no build or deployment.
