@@ -599,11 +599,20 @@ awareness even though it would not lose data.
 
 ## Outcome and deviations
 
-The requirement is implemented across five repositories with green gates in each
-and green CI on every open PR, and it is **not delivered**: nothing is deployed,
-no multi-service failure test has been run, and the cutover has not been
-rehearsed. The evidence table above records what each commit verified; what
-follows is what is deliberately not done.
+The requirement is implemented across five repositories, with green gates in each
+and green CI on every open PR, and it is **not delivered**: nothing is deployed
+and the cutover has not been rehearsed. The evidence table above records what each
+commit verified; the section below records what was deliberately not done.
+
+Final verification sweep, at the commits named in the evidence table:
+`gofmt`/`go build`/`go vet`/`go test`/`check.sh` green in session-manager and the
+backend (10 packages); `tsc --noEmit` and 149 Node tests green in agent-runtime;
+`tsc -b && vite build` green in the frontend; `buf lint`, a breaking-change check
+against `main`, and `go build` green in protos; and the durable schema, RLS,
+indexes, lease fencing, revision races, and function privileges verified on real
+Postgres. Four services were also run together for the integration, multi-replica,
+compaction, and hydration runs described above — which is where the two bugs that
+no unit test had caught were found.
 
 Deviations from the design as written:
 
@@ -627,7 +636,21 @@ Deviations from the design as written:
   through the v1 route. The design asks for a coordinated cutover rather than a
   permanent compatibility projection, so retiring it belongs with the cutover.
 
-What is left to call this complete: run the multi-service integration and
-multi-replica failure tests in an environment where the three services run
-together, build and rehearse the checkpoint-aware rollback binary, and execute the
-cutover in the order above.
+What is left to call this complete, in rough order of risk:
+
+1. **Rehearse the cutover and build a checkpoint-aware rollback binary.** Both are
+   unstarted, and the rollback path is the one place where being wrong loses data
+   rather than time.
+2. **Exercise the un-run integration paths**: cancellation through the backend,
+   end/delete, template archive/clone with the backend in the loop, between-request
+   compaction, and a replica taking over an orphaned lease.
+3. **Close the two frozen-configuration gaps** (a credential store and per-model
+   limits), which the design lists as open implementation details rather than work
+   this requirement can finish alone.
+4. **Merge the four PRs in the cutover order above**, which is what deploys them.
+
+The largest lesson from the phase 6 runs is worth recording: four rounds of green
+unit tests missed two bugs that made compaction unable to publish, and one live
+run found both. The unit tests were not wrong, but they injected the publisher and
+hand-built the context shape, so they could not see either defect. Any future work
+here should extend the live runs before it extends the unit suite.
