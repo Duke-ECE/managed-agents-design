@@ -1,6 +1,6 @@
 # Durable Sessions and Context Compaction
 
-Status: Proposed; implementation has not started.
+Status: Accepted; implementation is in progress.
 
 ## Objective
 

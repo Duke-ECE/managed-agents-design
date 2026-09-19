@@ -1,6 +1,6 @@
 # 0001: Durable Context Compaction
 
-Status: Draft
+Status: Implementing
 
 Created: 2026-09-18
 
@@ -29,5 +29,5 @@ Cold storage, branching, and cross-session memory are excluded.
 - [managed-agents-backend](https://github.com/Duke-ECE/managed-agents-backend)
 - [managed-agents-frontend](https://github.com/Duke-ECE/managed-agents-frontend)
 
-Individual product decisions have been accepted; the complete technical proposal
-has not yet been approved or implemented.
+The approved design is being implemented contract-first across the affected
+repositories. Delivery evidence and deviations are tracked in `delivery.md`.
