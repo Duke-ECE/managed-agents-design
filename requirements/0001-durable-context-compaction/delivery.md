@@ -312,10 +312,10 @@ admission is not yet race-safe because session creation still runs on v1.
   (`tsc -b && vite build`) green at every frontend commit in this requirement.
 - [ ] Run a multi-service local integration covering create, chat, tool loop,
   resume, cancel, end, delete, and template archive/clone. Partially run: two
-  services were driven together over gRPC and create, chat, duplicate delivery,
-  and restart hydration are verified (see the phase 6 integration run below).
-  The tool loop, cancellation, end/delete, and template archive/clone were not
-  exercised, so the item stays open.
+  services were driven together over gRPC and create, chat, the tool loop,
+  duplicate delivery, and restart hydration are verified (see the phase 6
+  integration run below). Cancellation, end/delete, and template archive/clone
+  were not exercised, so the item stays open.
 - [ ] Run multi-replica failure tests for runtime death, lease expiry/takeover,
   duplicate request delivery, and stale mutation rejection.
 - [ ] Run long-session tests that trigger between-request and mid-request
@@ -427,11 +427,24 @@ Verified across the wire:
   emitted a `durable_write` record for the finish (mutation id, message count,
   latency, ok).
 
-**Not verified by this run**, and therefore not claimed: the tool loop (the
-throwaway endpoint's tool-call chunks were not parsed by the client library, so
-no tool frames were produced), cancellation, end and delete, and template
-archive/clone — the last of which needs the backend in the loop. The services
-were stopped after the run; this is evidence, not a running environment.
+**Tool loop.** A second run with an endpoint that emits an OpenAI tool-call chunk
+drove a full tool cycle: the runtime streamed a `tool_call` frame (`call_1`,
+`bash`) and a `tool_result` frame for the same id, made a second model call, and
+completed. The durable transcript holds the whole turn — the root, the assistant
+message carrying the `tool_call` block, the tool message carrying its
+`tool_result` with `reply_to_message_id` pointing at that assistant message, and
+the final assistant text. Each model call kept **its own** usage record (20 then
+30 input tokens), which is the design's per-call accounting rather than an
+aggregate.
+
+The first attempt at this produced no tool frames; the fault was in the throwaway
+endpoint, which tested message content for a string when the client sends an array
+of parts. Fixing the harness produced the run above.
+
+**Not verified by these runs**, and therefore not claimed: cancellation, end and
+delete, and template archive/clone — the last of which needs the backend in the
+loop. The services were stopped after the runs; this is evidence, not a running
+environment.
 
 Additional results are appended when the matching checklist item is complete.
 
