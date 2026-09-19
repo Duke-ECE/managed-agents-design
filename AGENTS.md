@@ -4,7 +4,7 @@ Follow [Duke-ECE engineering standards](https://github.com/Duke-ECE/standards/bl
 
 - Write all documentation, examples, and comments in English.
 - Use one directory per requirement under requirements/, regardless of the number of affected repositories.
-- Copy requirements/_template/ in full to requirements/NNNN-descriptive-slug/.
+- Copy the root-level template/ directory in full to requirements/NNNN-descriptive-slug/.
 - Each requirement contains README.md, design.md, decisions.md, and delivery.md. Add files only when needed.
 - Update requirements/README.md when adding a requirement.
 - Use Draft, Accepted, Implementing, Completed, Deferred, or Cancelled for requirement status.

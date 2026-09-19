@@ -8,21 +8,22 @@ One requirement has one document directory, even when implementation spans sever
 code repositories. Keep its design, decision log, and delivery record together.
 
 ```text
-requirements/
-├── README.md
-├── _template/
+managed-agents-design/
+├── template/
 │   ├── README.md
 │   ├── design.md
 │   ├── decisions.md
 │   └── delivery.md
-└── 0001-durable-context-compaction/
+└── requirements/
     ├── README.md
-    ├── design.md
-    ├── decisions.md
-    └── delivery.md
+    └── 0001-durable-context-compaction/
+        ├── README.md
+        ├── design.md
+        ├── decisions.md
+        └── delivery.md
 ```
 
-Copy requirements/_template/ for each new requirement. Append decisions to that
+Copy the root-level template/ for each new requirement. Append decisions to that
 requirement's decisions.md. Other requirements may link to those decisions
 without copying them. Current implemented architecture lives in architecture/.
 
@@ -36,7 +37,7 @@ without copying them. Current implemented architecture lives in architecture/.
 ## Navigation
 
 - [Requirements and creation instructions](requirements/README.md)
-- [Complete requirement template](requirements/_template/README.md)
+- [Complete requirement template](template/README.md)
 - [Current architecture](architecture/README.md)
 - [Agent instructions](AGENTS.md)
 
