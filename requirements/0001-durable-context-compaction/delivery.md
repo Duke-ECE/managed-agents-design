@@ -209,18 +209,15 @@ admission is not yet race-safe because session creation still runs on v1.
 - [ ] Show queued, running, completed, failed, cancelled, interrupted, partial,
   and provisional states without presenting unsaved output as durable.
 - [ ] Generate and reuse stable request IDs across SSE reconnects.
-- [ ] Replace Edit/Delete template actions with Clone/Archive and filter archived
-  templates from the default new-session picker. Archive replaces the
-  destructive Delete action: the Agents page archives with a non-destructive
-  confirm, keeps the row in place, shows an Archived badge, and offers View and
-  Clone for a retired template. The new-chat picker derives a selectable list
-  that excludes archived templates (options, default selection, and the
-  no-usable-agent check) while the full list still resolves an open session's
-  agent_id to a display name, so an archived template a live session already
-  resolved keeps its badge. Edit remains: the endpoint it calls is now a
-  uniform refusal rather than a working mutation, so selecting it surfaces the
-  backend's "templates are immutable; clone" message instead of editing. Hiding
-  or replacing that action is the last piece of this item.
+- [x] Replace Edit/Delete template actions with Clone/Archive and filter archived
+  templates from the default new-session picker. Delete became Archive (a
+  non-destructive confirm that keeps the row in place and shows an Archived
+  badge), Edit is gone entirely — the drawer's edit state, its PATCH branch, and
+  the `updateAgent` client were removed rather than hidden, so the type system
+  enforces that a template can never be edited — and the new-chat picker derives
+  a selectable list that excludes archived templates while still resolving an
+  open session's `agent_id` to a display name. Own templates offer Clone and
+  Archive; platform and archived ones offer View and Clone.
 - [ ] Preserve cursor pagination, cache revalidation, cancellation, and history
   navigation under the v2 response schema.
 - [ ] Pass the TypeScript and Vite production build.
@@ -272,6 +269,7 @@ requirement can be marked Completed without relying on uncommitted local state.
 | 2026-09-19 | agent-runtime | `5b23f77` | `npm test` green (125 tests) — `runtime.v2.AgentService` handler registered alongside v1; PR CI green |
 | 2026-09-19 | agent-runtime | `9570606` | `npm test` green (126 tests) — handler end-to-end tests (completed turn, reconnect dedup, failed model call) over the real pi loop with a scripted stream |
 | 2026-09-19 | managed-agents-backend | `5b6d2bb` | `gofmt -l .` clean; `go build ./...`; `go vet ./...`; `go test ./...`; `./scripts/check.sh` — clone/archive rules, adapter, HTTP routes, and error mapping covered |
+| 2026-09-19 | managed-agents-frontend | `27e37c9` | `npm run build` (`tsc -b && vite build`) green — Edit state removed (type-enforced), own templates offer Clone/Archive only |
 | 2026-09-19 | managed-agents-frontend | `db1b5fe` | `npm run build` (`tsc -b && vite build`) green — archived templates excluded from new-chat selection, still resolved for display |
 | 2026-09-19 | managed-agents-frontend | `a30be68` | `npm run build` (`tsc -b && vite build`) green — archive replaces delete on the Agents page, archived state surfaced |
 | 2026-09-19 | managed-agents-backend | `1e75113` | `gofmt -l .` clean; `go build ./...`; `go vet ./...`; `go test ./...`; `./scripts/check.sh` — PATCH refused uniformly, mutation path removed, row verified untouched |
