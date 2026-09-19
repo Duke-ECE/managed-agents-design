@@ -311,7 +311,11 @@ admission is not yet race-safe because session creation still runs on v1.
 - [x] Pass the TypeScript and Vite production build. `npm run build`
   (`tsc -b && vite build`) green at every frontend commit in this requirement.
 - [ ] Run a multi-service local integration covering create, chat, tool loop,
-  resume, cancel, end, delete, and template archive/clone.
+  resume, cancel, end, delete, and template archive/clone. Partially run: two
+  services were driven together over gRPC and create, chat, duplicate delivery,
+  and restart hydration are verified (see the phase 6 integration run below).
+  The tool loop, cancellation, end/delete, and template archive/clone were not
+  exercised, so the item stays open.
 - [ ] Run multi-replica failure tests for runtime death, lease expiry/takeover,
   duplicate request delivery, and stale mutation rejection.
 - [ ] Run long-session tests that trigger between-request and mid-request
@@ -394,6 +398,40 @@ requirement can be marked Completed without relying on uncommitted local state.
 | 2026-09-19 | managed-agents-backend | `45671f1` | Guide updated: no delete route, PATCH described as a uniform immutability refusal |
 | 2026-09-19 | managed-agents-frontend | `f73c048` | `npm run build` green — the dead `deleteAgent` client removed |
 | 2026-09-19 | managed-agents-backend | `d4c5b17` | Durable chat streamed over SSE under the shared event names, with the request identity echoed before the stream and a rejected submission answered as a real status code |
+
+### Phase 6 integration run (2026-09-19)
+
+Two services were run locally together and driven over gRPC: session-manager in
+its in-memory mode (`:50053`, service token `tok`) and agent-runtime on
+`:50055` (the default `:50052` is held by macOS `rapportd`), pointed at a
+throwaway OpenAI-compatible endpoint on `:5099` that streams a canned
+completion.
+
+Verified across the wire:
+
+- **Canonical admission.** `session.v2.CreateSession` with a frozen
+  configuration returned a session whose config the runtime then used.
+- **Durable chat.** `runtime.v2.Chat` streamed five text deltas, then a `done`
+  frame with `EXECUTION_STATUS_COMPLETED`, revision 3, and aggregate usage
+  11/5/16.
+- **Durable persistence.** The transcript read back from session-manager held the
+  request root (client request id, request hash, execution status, started and
+  finished timestamps) and the assistant message with its per-model-call usage,
+  at revision 3.
+- **Duplicate delivery.** Replaying the same `client_request_id` returned the
+  *same* root id and status and left the transcript at two messages: no second
+  model call, no duplicate rows.
+- **Restart hydration.** After killing and restarting the runtime, a new turn
+  appended to the same transcript (sequences 1-4) and the runtime logged
+  `hydrated durable session <id> with 2 canonical messages`. The telemetry sink
+  emitted a `durable_write` record for the finish (mutation id, message count,
+  latency, ok).
+
+**Not verified by this run**, and therefore not claimed: the tool loop (the
+throwaway endpoint's tool-call chunks were not parsed by the client library, so
+no tool frames were produced), cancellation, end and delete, and template
+archive/clone — the last of which needs the backend in the loop. The services
+were stopped after the run; this is evidence, not a running environment.
 
 Additional results are appended when the matching checklist item is complete.
 
