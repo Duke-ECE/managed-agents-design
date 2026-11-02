@@ -11,7 +11,11 @@ Status: In progress
 
 ## Pull requests and versions
 
-None yet.
+- Backend: [PR #2](https://github.com/Duke-ECE/managed-agents-backend/pull/2), branch `feat/api-keys`, commit `41c3cc2` (draft; targets agent-template archive branch).
+- Console: [PR #3](https://github.com/Duke-ECE/managed-agents-frontend/pull/3), branch `feat/api-keys-ui`, commits `3357a4e` and `e993bf2` (draft; targets template-archive UI branch).
+- Docs: [PR #1](https://github.com/Duke-ECE/managed-agents-docs/pull/1), branch `feat/third-party-chat-sdk`, commit `1328178` (draft).
+- Design: [PR #1](https://github.com/Duke-ECE/managed-agents-design/pull/1), branch `feat/third-party-chat-sdk` (draft).
+- SDK: local repository, branch `feat/third-party-chat-sdk`, commit `2dba3a4`; no remote, registry, or published version yet.
 
 ## Verification
 
