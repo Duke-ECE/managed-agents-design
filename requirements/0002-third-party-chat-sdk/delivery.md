@@ -18,6 +18,8 @@ Status: In progress
 - SDK: local repository, branch `feat/third-party-chat-sdk`, commit `2dba3a4`; no remote, registry, or published version yet.
 - Released API-key backend: [PR #3](https://github.com/Duke-ECE/managed-agents-backend/pull/3), merge `8383584`, main deployment [Actions run](https://github.com/Duke-ECE/managed-agents-backend/actions/runs/41388394896) succeeded.
 - Released console: [PR #4](https://github.com/Duke-ECE/managed-agents-frontend/pull/4), merge `8e848c8`, main deployment [Actions run](https://github.com/Duke-ECE/managed-agents-frontend/actions/runs/41388757858) succeeded.
+- Public developer documentation: [docs PR #3](https://github.com/Duke-ECE/managed-agents-docs/pull/3), merged to main; [Pages deployment](https://github.com/Duke-ECE/managed-agents-docs/actions/runs/41489629746) succeeded. The [API guide](https://duke-ece.github.io/managed-agents-docs/developers/api-guide) and [architecture diagram](https://duke-ece.github.io/managed-agents-docs/diagrams/agent-runtime-concept.png) returned HTTP 200.
+- Public landing-page links: [frontend PR #9](https://github.com/Duke-ECE/managed-agents-frontend/pull/9), merged to main; CI passed. Main deployment: [Actions run](https://github.com/Duke-ECE/managed-agents-frontend/actions/runs/41489812093).
 
 ## Verification
 

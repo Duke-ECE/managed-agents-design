@@ -71,3 +71,21 @@ Release the API-key backend and console page on the current v1 session API throu
 ### Consequences
 
 Server-side callers can issue keys and use the existing create/chat/history session routes. They must inspect history before retrying an uncertain chat submission; the current backend does not deduplicate it. The original draft PRs must be reconciled with this release before they are merged.
+
+## D005: Public integration documentation
+
+Status: Accepted
+
+Date: 2026-11-02
+
+### Context
+
+The console's API guide sits behind login, while application developers need a shareable entry point from the public site.
+
+### Decision
+
+Publish the integration flow and current HTTP/SSE examples on the GitHub Pages documentation site. Link to it from the public frontend landing page. Keep key issuance and agent configuration in the authenticated console. Mark the architecture image as a proposed design rather than the deployed API contract.
+
+### Consequences
+
+The documentation site is the public guide; the console tab remains a convenience for signed-in users. Examples must match the deployed backend and must not claim the unpublished SDK or durable retry behavior is available.
