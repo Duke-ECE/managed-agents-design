@@ -53,3 +53,21 @@ Version 1 supports text chat and forwards any tool-related stream events as raw 
 ### Consequences
 
 Integrators must treat tool errors as failures. Adding sandbox or integrator-side tool execution later requires a separate design and verification.
+
+## D004: Release API keys before the durable-session cutover
+
+Status: Accepted
+
+Date: 2026-11-01
+
+### Context
+
+The durable-session requirement still needs cutover and rollback rehearsal. Its backend and console branches contain the API-key changes, but merging those branches would also deploy the unready multi-service cutover.
+
+### Decision
+
+Release the API-key backend and console page on the current v1 session API through isolated branches. Keep the SDK and its durable cancellation and request-deduplication claims unpublished until that contract is deployed and verified.
+
+### Consequences
+
+Server-side callers can issue keys and use the existing create/chat/history session routes. They must inspect history before retrying an uncertain chat submission; the current backend does not deduplicate it. The original draft PRs must be reconciled with this release before they are merged.

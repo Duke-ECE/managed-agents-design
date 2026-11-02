@@ -16,15 +16,17 @@ Status: In progress
 - Docs: [PR #1](https://github.com/Duke-ECE/managed-agents-docs/pull/1), branch `feat/third-party-chat-sdk`, commit `1328178` (draft).
 - Design: [PR #1](https://github.com/Duke-ECE/managed-agents-design/pull/1), branch `feat/third-party-chat-sdk` (draft).
 - SDK: local repository, branch `feat/third-party-chat-sdk`, commit `2dba3a4`; no remote, registry, or published version yet.
+- Released API-key backend: [PR #3](https://github.com/Duke-ECE/managed-agents-backend/pull/3), merge `8383584`, main deployment [Actions run](https://github.com/Duke-ECE/managed-agents-backend/actions/runs/41388394896) succeeded.
+- Released console: [PR #4](https://github.com/Duke-ECE/managed-agents-frontend/pull/4), merge `8e848c8`, main deployment [Actions run](https://github.com/Duke-ECE/managed-agents-frontend/actions/runs/41388757858) succeeded.
 
 ## Verification
 
-The local TypeScript client builds and its four HTTP/SSE/session-management tests pass with Node 22. The repository includes a runnable quickstart for an upgraded backend. Backend `go build ./...`, `go vet ./...`, and `go test ./...` pass, including key lifecycle, PostgREST-adapter, and route-auth tests. Frontend `npm run build` and docs `npm run docs:build` pass. The migration applied cleanly to a disposable local PostgreSQL 16 database; its RLS/grants check returned `t|t|f|f` (RLS enabled, service role permitted, anon/authenticated denied). The disposable database was removed. The migration has not been applied to Supabase and no deployed integration test has run. D003 fixes the first release to text chat. Acceptance cases are in [design.md](design.md).
+The local TypeScript client builds and its four HTTP/SSE/session-management tests pass with Node 22. The repository includes a runnable quickstart for an upgraded backend. Backend `go build ./...`, `go vet ./...`, `go test ./...`, and `./scripts/check.sh` pass, including key lifecycle, PostgREST-adapter, and route-auth tests. Frontend `npm run build` and docs `npm run docs:build` pass. The migration applied cleanly to a disposable local PostgreSQL 16 database; its RLS/grants check returned `t|t|f|f` (RLS enabled, service role permitted, anon/authenticated denied). The disposable database was removed. Production migration `20261102042400_api_keys.sql` was applied to Supabase; the live check returned RLS enabled, service-role access true, anon/authenticated read false, and zero keys. Both release PRs passed CI and their main deployment workflows succeeded. The deployed backend answers health 200, unauthenticated `/api/keys` 401, and invalid platform-key session access 401. A real owner login, key issuance, chat, and revocation smoke test remains pending. D003 fixes text-chat scope; D004 records the staged release. Acceptance cases are in [design.md](design.md).
 
 ## Migration, rollout, and rollback
 
-Apply the additive `api_keys` migration, deploy the backend, then deploy the console and run the quickstart with a disposable key and accessible agent. Revoke that key and verify the next request is rejected. Roll back the backend and console deployments if needed; leave the additive table in place until keys are retired. Do not publish the SDK before a deployed backend supports its contract.
+The additive `api_keys` migration, backend, and console were deployed in that order. Run an owner-authenticated smoke test with a disposable key and accessible agent; revoke the key and verify the next request is rejected. Roll back the backend and console deployments if needed; leave the additive table in place until keys are retired. The SDK remains private until its durable cancellation and retry contract is deployed and verified.
 
 ## Outcome and deviations
 
-Pending.
+The API-key issuance and console UI subset is live. The complete SDK requirement is still in progress: package distribution, durable cancellation/retry behavior, and an authenticated end-to-end smoke test remain open.
