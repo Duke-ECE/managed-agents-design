@@ -88,4 +88,22 @@ Publish the integration flow and current HTTP/SSE examples on the GitHub Pages d
 
 ### Consequences
 
-The documentation site is the public guide; the console tab remains a convenience for signed-in users. Examples must match the deployed backend and must not claim the unpublished SDK or durable retry behavior is available.
+The documentation site is the public guide; console key management links to it. Examples must match the deployed backend and must not claim the unpublished SDK or durable retry behavior is available.
+
+## D006: Consistent public-site and console navigation
+
+Status: Accepted
+
+Date: 2026-11-02
+
+### Context
+
+The public site, console, and documentation site have overlapping entry points. Console links currently land on `/agents`, while a direct login lands on `/chat`; the API guide is duplicated inside the key-management page.
+
+### Decision
+
+Keep the product homepage at the frontend origin and the documentation index on GitHub Pages. Add a guarded `/console` entry that resolves to `/agents`, preserve deep links through login, make the public API guide the canonical guide, and keep key issuance on `/keys`. Redirect legacy `/keys?tab=docs` visits to the public guide. Add reciprocal Docs and Console links and a public 404 page.
+
+### Consequences
+
+No origin, OAuth callback URL, or backend CORS change is required. Deploy the frontend route before updating documentation links to `/console`; existing `/agents`, `/chat`, and `/keys` links remain valid.
