@@ -4,7 +4,7 @@ Status: In progress
 
 ## Work by repository
 
-1. Keep the SDK as a local draft until the backend migration and deployed API are verified; choose a registry before publication.
+1. Keep the SDK as a local draft until the owner-authenticated production API and durable contract are verified; prepare the selected public npm distribution before publication.
 2. Add any necessary backend contract changes.
 3. Implement the SDK and a runnable third-party quickstart.
 4. Document errors, cancellation, reconnection, and credential handling.
@@ -15,7 +15,7 @@ Status: In progress
 - Console: [PR #3](https://github.com/Duke-ECE/managed-agents-frontend/pull/3), branch `feat/api-keys-ui`, commits `3357a4e` and `e993bf2` (draft; targets template-archive UI branch).
 - Docs: [PR #1](https://github.com/Duke-ECE/managed-agents-docs/pull/1), branch `feat/third-party-chat-sdk`, commit `1328178` (draft).
 - Design: [PR #1](https://github.com/Duke-ECE/managed-agents-design/pull/1), branch `feat/third-party-chat-sdk` (draft).
-- SDK: local repository, branch `feat/third-party-chat-sdk`, commits `2dba3a4`, `8e44d46`, and `5f65a2d`; no remote, registry, or published version yet. The current session API is the default client mode; unpublished request identity and cancellation require explicit `durable: true`. The quickstart supports two-turn chat and transcript retrieval with actionable incomplete-stream guidance.
+- SDK: local repository, branch `feat/third-party-chat-sdk`, commits `2dba3a4`, `8e44d46`, `5f65a2d`, and `1a727f6`; no remote or published version yet. D007 selects the public npm package `@duke-ece/managed-agents-sdk` under MIT. The current session API is the default client mode; unpublished request identity and cancellation require explicit `durable: true`. The quickstart supports two-turn chat and transcript retrieval with actionable incomplete-stream guidance.
 - Released API-key backend: [PR #3](https://github.com/Duke-ECE/managed-agents-backend/pull/3), merge `8383584`, main deployment [Actions run](https://github.com/Duke-ECE/managed-agents-backend/actions/runs/41388394896) succeeded.
 - Released console: [PR #4](https://github.com/Duke-ECE/managed-agents-frontend/pull/4), merge `8e848c8`, main deployment [Actions run](https://github.com/Duke-ECE/managed-agents-frontend/actions/runs/41388757858) succeeded.
 - Public developer documentation: [docs PR #3](https://github.com/Duke-ECE/managed-agents-docs/pull/3), merged to main; [Pages deployment](https://github.com/Duke-ECE/managed-agents-docs/actions/runs/41489629746) succeeded. The [API guide](https://duke-ece.github.io/managed-agents-docs/developers/api-guide) and [architecture diagram](https://duke-ece.github.io/managed-agents-docs/diagrams/agent-runtime-concept.png) returned HTTP 200.
@@ -32,10 +32,12 @@ On 2026-11-06, SDK commit `8e44d46` made the deployed v1 session contract the de
 
 SDK commit `5f65a2d` exercised the quickstart through an in-process HTTP server: session creation, two SSE turns on the same session, and transcript retrieval. A truncated SSE response produces a nonzero exit and instructs the caller to inspect history before retrying. Node 22 `npm test` passed all eight tests. `npm pack --dry-run` included only the README, compiled JavaScript, declarations, and manifest; the tarball also installed and imported successfully in a separate temporary project. No production API key or agent ID was available in the local environment, so an owner-authenticated production call remains pending.
 
+SDK commit `1a727f6` prepared public npm metadata, MIT licensing, and a build/test/pack CI workflow. `npm ci --ignore-scripts`, all eight Node 22 tests, and `npm publish --dry-run --access public --registry=https://registry.npmjs.org/` passed; the final tarball contains only LICENSE, README, compiled JavaScript, type declarations, and package manifest. The machine is not logged in to npm, the `@duke-ece` npm organization permission has not been verified, and the source repository has no remote. No registry publication occurred.
+
 ## Migration, rollout, and rollback
 
 The additive `api_keys` migration, backend, and console were deployed in that order. Run an owner-authenticated smoke test with a disposable key and accessible agent; revoke the key and verify the next request is rejected. Roll back the backend and console deployments if needed; leave the additive table in place until keys are retired. The SDK remains private until its durable cancellation and retry contract is deployed and verified.
 
 ## Outcome and deviations
 
-The API-key issuance and console UI subset is live. The complete SDK requirement is still in progress: package distribution, durable cancellation/retry behavior, and an authenticated end-to-end smoke test remain open.
+The API-key issuance and console UI subset is live. The complete SDK requirement is still in progress: public npm publication, durable cancellation/retry behavior, and an authenticated end-to-end smoke test remain open.

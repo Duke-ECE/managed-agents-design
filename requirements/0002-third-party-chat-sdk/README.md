@@ -25,5 +25,5 @@ TypeScript/JavaScript and user-issued server-side platform API keys are selected
 - [managed-agents-backend](https://github.com/Duke-ECE/managed-agents-backend): API-key issuance, revocation, and session authentication.
 - [managed-agents-frontend](https://github.com/Duke-ECE/managed-agents-frontend): API Keys page.
 - [agent-runtime](https://github.com/Duke-ECE/agent-runtime): tool behavior if the selected approach requires runtime changes.
-- `managed-agents-sdk/` (local new repository): TypeScript/JavaScript chat client. Package distribution remains open.
+- `managed-agents-sdk/` (local new repository): TypeScript/JavaScript chat client. Public npm distribution under `@duke-ece/managed-agents-sdk` is selected in D007; the first release remains pending.
 - [managed-agents-docs](https://github.com/Duke-ECE/managed-agents-docs): third-party integration guide.

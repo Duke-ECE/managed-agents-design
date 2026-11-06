@@ -107,3 +107,21 @@ Keep the product homepage at the frontend origin and the documentation index on 
 ### Consequences
 
 No origin, OAuth callback URL, or backend CORS change is required. Deploy the frontend route before updating documentation links to `/console`; existing `/agents`, `/chat`, and `/keys` links remain valid.
+
+## D007: Public npm distribution for the SDK
+
+Status: Accepted
+
+Date: 2026-11-06
+
+### Context
+
+The local SDK has a working package tarball, but no registry or remote repository. Third-party Node.js applications need a stable installation path.
+
+### Decision
+
+Publish the first SDK as the public npm package `@duke-ece/managed-agents-sdk` under the MIT license. The package must use the official npm registry, public access, and a release build that includes only compiled JavaScript, type declarations, the README, license, and package manifest.
+
+### Consequences
+
+The `@duke-ece` npm organization must exist and grant publishing rights. The first registry release remains gated by the owner-authenticated production chat check and the durable-session release condition recorded in D004. Until then, local tarballs support integration testing.

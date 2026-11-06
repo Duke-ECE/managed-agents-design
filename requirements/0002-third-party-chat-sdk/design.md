@@ -8,7 +8,7 @@ The console embeds its own HTTP/SSE client. Third-party developers need a suppor
 
 ## Decisions and alternatives
 
-D001: TypeScript/JavaScript is the first SDK language. Package distribution remains open.
+D001: TypeScript/JavaScript is the first SDK language. D007 selects public npm distribution under the `@duke-ece` scope.
 
 D002: each user can generate a named server-side platform API key for a third-party integration. The key acts as that user's identity. It can create and manage only that user's sessions and can create a session only with an existing agent template visible to that user. Key creation/list/revocation requires the user's Supabase login; the key authenticates `/api/sessions*` only. A custom LLM key is a provider credential, not platform authentication. Secrets are shown once, stored as SHA-256 hashes of 256-bit random values, and checked against the store on every request so revocation is immediate. Usage limits remain a future concern.
 
@@ -32,7 +32,7 @@ Authenticate, create a session for an accessible existing agent, POST text, pars
 
 ## Open questions
 
-- Which package registry and publication process?
+- What npm organization setup and release automation will be used after the first owner-authenticated smoke test?
 - Should keys receive finer agent or operation scopes in a future version?
 - How should tool execution be added in a later version?
 - Are SDK consumers server-side only, or must browser CORS be supported?
