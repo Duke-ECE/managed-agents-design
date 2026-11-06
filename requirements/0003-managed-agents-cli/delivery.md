@@ -17,7 +17,7 @@ Status: In progress
 
 Go 1.25.5: `GOTOOLCHAIN=local go build ./...`, `go vet ./...`, `go test ./...`, and `go test -race ./...` passed. A fake OAuth server test checked the PKCE challenge, callback, code exchange, and credential write; the full production GitHub browser round-trip still requires a human sign-in.
 
-The initial CLI GitHub Actions [CI run](https://github.com/Duke-ECE/managed-agents-cli/actions/runs/42311662267) completed successfully.
+The initial CLI GitHub Actions [CI run](https://github.com/Duke-ECE/managed-agents-cli/actions/runs/42311662267) and the [Keychain hardening CI run](https://github.com/Duke-ECE/managed-agents-cli/actions/runs/42312109224) completed successfully.
 
 Public `go install ...@latest` succeeded through `proxy.golang.org` and the installed binary printed its help. This machine's configured `goproxy.cn` mirror returned 404 for the new module's checksum lookup, so the README records the official-proxy override. The macOS Keychain write path was changed to feed the session through standard input rather than process arguments; a real Keychain round-trip test passed.
 
