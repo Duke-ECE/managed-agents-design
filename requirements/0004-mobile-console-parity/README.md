@@ -21,4 +21,5 @@ Mobile UI and API integration, plus the Supabase Auth redirect allow-list for th
 ## Affected repositories
 
 - `managed-agents-mobile`: Expo client and acceptance checklist.
+- `managed-agents-frontend`: signed-in homepage and searchable session list shared with the mobile experience.
 - `managed-agents-backend`: Supabase Auth redirect configuration only.
