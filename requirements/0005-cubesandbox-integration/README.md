@@ -17,6 +17,7 @@ Research and a staged integration of a separate Cube cluster mediated by the pla
 - [Two-cluster architecture diagram](two-clusters.png)
 - [Technical design](design.md)
 - [Delivery plan](delivery.md)
+- [Session lifecycle and web/mobile development plan](lifecycle-and-clients-plan.md)
 - [Decisions](decisions.md)
 
 ## Affected repositories
