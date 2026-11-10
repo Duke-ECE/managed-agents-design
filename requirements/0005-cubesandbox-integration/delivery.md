@@ -1,6 +1,6 @@
 # Delivery Plan
 
-Status: Stage 0 cross-cluster network verified; v3 contract and manager adapter in local development
+Status: Stage 0 cross-cluster network verified; v3 contract released, manager and runtime bridges in draft PRs
 
 ## Work by repository and milestone
 
@@ -15,7 +15,7 @@ Status: Stage 0 cross-cluster network verified; v3 contract and manager adapter 
 
 ## Pull requests and versions
 
-The test cluster is pinned to the official CubeSandbox `v0.7.3` one-click AMD64 release. Its Python verification uses `e2b-code-interpreter==2.4.1` and `e2b==2.10.2`. The newer `e2b-code-interpreter==2.11.9` uses `/v2/sandboxes`, which this release rejected with HTTP 405. The manager adapter uses Cube Go SDK `v0.7.3`. The new contract is in [protos draft PR #2](https://github.com/Duke-ECE/protos/pull/2); the manager implementation is on branch `feat/cube-session-manager` and awaits a tagged proto release before independent CI. No proto tag or deployment has been made.
+The test cluster is pinned to the official CubeSandbox `v0.7.3` one-click AMD64 release. Its Python verification uses `e2b-code-interpreter==2.4.1` and `e2b==2.10.2`. The newer `e2b-code-interpreter==2.11.9` uses `/v2/sandboxes`, which this release rejected with HTTP 405. The manager adapter uses Cube Go SDK `v0.7.3`. The v3 contract was merged in [protos PR #2](https://github.com/Duke-ECE/protos/pull/2) and its additive multi-edit extension in [PR #3](https://github.com/Duke-ECE/protos/pull/3); the current tag is `v0.9.1`. The manager implementation is in [sandbox-manager draft PR #1](https://github.com/Duke-ECE/sandbox-manager/pull/1), pinned to proto `v0.9.1`. The runtime bridge is in [agent-runtime draft PR #2](https://github.com/Duke-ECE/agent-runtime/pull/2), with vendored proto from `v0.9.1`. Neither service PR has been merged or deployed.
 
 ## Verification
 
@@ -39,4 +39,4 @@ Deploy v3 manager behind a disabled flag, then runtime bridge with `NullExecutor
 
 ## Outcome and deviations
 
-The Cube test cluster is running on one host and the cross-cluster CubeAPI/CubeProxy create/execute/file/close flow is verified from Duke. A draft `sandbox.v3` contract and manager-side Cube adapter now exist locally; the proto has not been tagged and the manager is not deployed. Runtime wiring, durable multi-replica bindings, authentication review, non-root template, cancellation/cleanup guarantees, and rollout gates remain open.
+The Cube test cluster is running on one host and the cross-cluster CubeAPI/CubeProxy create/execute/file/close flow is verified from Duke. The v3 contract is tagged, while manager and runtime bridges are in draft PRs with their feature flags off in deployed manifests. Manager build, vet, all tests, race tests for the new slice/transport, and `scripts/check.sh` pass; runtime build and 151 tests pass. The runtime bridge maps all four tools, propagates cancellation, and closes v1 session sandboxes on end/TTL. Durable v2 end/purge cleanup, durable multi-replica bindings, non-root template, full manager gRPC-to-live-Cube verification, auth review, and rollout gates remain open.
