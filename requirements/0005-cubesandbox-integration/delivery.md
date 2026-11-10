@@ -33,6 +33,8 @@ CubeProxy data-plane ingress was added to NPM as Proxy Host 5 (`*.weihao.duckdns
 
 A second disposable probe ran the actual manager Cube adapter and v3 gRPC handler on the Duke control-plane VM, with the CubeAPI key supplied only to the probe process. It called `EnsureSessionSandbox`, `ExecuteTool(bash)`, `PutResource`, `ExecuteTool(edit)` with two replacements, `GetResource`, and `CloseSessionSandbox` over a local gRPC connection. The bash result was `manager-grpc`, the file result was `hi manager`, and close succeeded. The probe binary and source were removed afterward; no deployed manager or runtime setting was changed.
 
+Network checks from the existing `sandbox-manager` Kubernetes Pod (running on Duke worker `vcm-52343`) passed: HTTPS `GET /health` through NPM returned `{"status":"ok","sandboxes":0}`, and a generated CubeProxy hostname returned the expected HTTP 404 for a nonexistent sandbox rather than a TLS, DNS, or access-list failure. This establishes Pod egress reachability without enabling v3 in the deployed manager.
+
 Development security decision (D004): use this HTTPS route and the existing CubeAPI key for the first manager integration. A private tunnel and dedicated service-to-service authorization are deferred and remain required review items before broader rollout. The Duke source-IP list alone is not a workload identity. Do not expose CubeMaster to the manager or the public internet. The `Ali` SSH host was rechecked on 2026-11-09: it has no Cube services and has not joined the cluster; CubeOps still lists only node `192.168.1.68`.
 
 ## Migration, rollout, and rollback
