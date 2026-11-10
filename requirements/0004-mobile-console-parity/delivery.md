@@ -1,6 +1,6 @@
 # Delivery Plan
 
-Status: Implemented locally; device acceptance pending
+Status: Mobile implementation merged; device acceptance pending
 
 ## Work by repository
 
@@ -12,6 +12,14 @@ Status: Implemented locally; device acceptance pending
 The chat timeline and tool activity layout was merged in [managed-agents-mobile PR #1](https://github.com/Duke-ECE/managed-agents-mobile/pull/1) on 2026-11-10. The mobile client now orders tool calls before the final assistant reply and renders each call as one expandable row. Native release and device acceptance remain open.
 
 Session ID display/search and the searchable new-conversation agent picker were merged in [managed-agents-mobile PR #2](https://github.com/Duke-ECE/managed-agents-mobile/pull/2). The signed-in homepage and session ID display/search were merged in [managed-agents-frontend PR #14](https://github.com/Duke-ECE/managed-agents-frontend/pull/14). Search loads older session pages on demand; it does not add a backend search endpoint.
+
+The initial parity implementation is on mobile `main` in
+[90c9665](https://github.com/Duke-ECE/managed-agents-mobile/commit/90c9665).
+The user-facing name was updated in [mobile PR #3](https://github.com/Duke-ECE/managed-agents-mobile/pull/3).
+The callback allow-list entry was pushed to backend `feat/api-keys` in
+[a0b2e62](https://github.com/Duke-ECE/managed-agents-backend/commit/a0b2e62).
+As of 2026-11-10, backend `main` lacks that entry, and applying the
+redirect to the hosted Auth project has not been verified.
 
 ## Verification
 
