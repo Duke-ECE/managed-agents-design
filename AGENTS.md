@@ -2,6 +2,8 @@
 
 Follow [Duke-ECE engineering standards](https://github.com/Duke-ECE/standards/blob/main/AGENTS.md).
 
+The user-facing product name is **PolyAgent**. Use it in UI text, page titles, documentation, CLI help, and other copy shown to users. Established technical identifiers remain `managed-agents`, including repository and module names, npm packages and exports, CLI commands, environment variables, storage keys, OAuth callbacks, URLs, Kubernetes resources, and container images. Change those only through a separate compatibility or deployment migration. PolyAgent is a personal project deployed on Duke servers.
+
 - Write all documentation, examples, and comments in English.
 - Use one directory per requirement under requirements/, regardless of the number of affected repositories.
 - Copy the root-level template/ directory in full to requirements/NNNN-descriptive-slug/.
