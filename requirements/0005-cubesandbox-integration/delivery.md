@@ -1,6 +1,6 @@
 # Delivery Plan
 
-Status: Lifecycle cleanup deployed; runtime user-tool rollout in progress
+Status: Bounded user-tool pilot enabled; durable lifecycle and client acceptance remain open
 
 ## Work by repository and milestone
 
@@ -39,7 +39,7 @@ Development security decision (D004): use this HTTPS route and the existing Cube
 
 ## Session lifecycle and user-tool rollout (2026-11-10)
 
-The session lifecycle plan and web/mobile design are in [lifecycle-and-clients-plan.md](lifecycle-and-clients-plan.md). The manager's [PR #4](https://github.com/Duke-ECE/sandbox-manager/pull/4) adds periodic reconciliation of expired Cube bindings and a process-local lost-workspace tombstone; CI and deployment succeeded, and the manager is 1/1 ready. The backend's [PR #4](https://github.com/Duke-ECE/managed-agents-backend/pull/4) closes a Cube workspace only after the durable session manager accepts end or purge; denied operations do not close it. CI and deployment succeeded, and the backend is 2/2 ready. Local Go build, vet, all tests, and repository checks passed for both; the manager sessioncube race test passed. The runtime's [PR #3](https://github.com/Duke-ECE/agent-runtime/pull/3) adds the sandbox-manager address to its deployment; its clean Node 22 test run passed all 78 tests and PR CI passed. It was merged after both cleanup services deployed. The runtime deployment and user-level smoke check are still pending at this record's time.
+The session lifecycle plan and web/mobile design are in [lifecycle-and-clients-plan.md](lifecycle-and-clients-plan.md). The manager's [PR #4](https://github.com/Duke-ECE/sandbox-manager/pull/4) adds periodic reconciliation of expired Cube bindings and a process-local lost-workspace tombstone; CI and deployment succeeded, and the manager is 1/1 ready. The backend's [PR #4](https://github.com/Duke-ECE/managed-agents-backend/pull/4) closes a Cube workspace only after the durable session manager accepts end or purge; denied operations do not close it. CI and deployment succeeded, and the backend is 2/2 ready. Local Go build, vet, all tests, and repository checks passed for both; the manager sessioncube race test passed. The runtime's [PR #3](https://github.com/Duke-ECE/agent-runtime/pull/3) adds the sandbox-manager address to its deployment; its clean Node 22 test run passed all 78 tests and PR CI passed. It was merged after both cleanup services deployed. The runtime main-branch CI and deployment succeeded. The deployed runtime is 1/1 ready with `SANDBOX_MANAGER_ADDR` configured. A disposable `bash` call through `CubeToolExecutor` in the runtime Pod returned `cube-user-tools-ready`; `CloseSessionSandbox` succeeded and CubeAPI `/health` reported zero active sandboxes. The existing local CLI session could not refresh (HTTP 400), so an authenticated browser/App end-to-end test remains pending.
 
 This enables only a bounded development pilot (`CUBE_MAX_SESSIONS=2`, `CUBE_TTL_SECONDS=1800`), not a completed durable lifecycle. Tombstones remain process-local, and the manager lacks a transactional persistent binding/close-intent store, an independent retry janitor for failed kills, and a verified user cohort gate. The plan retains those as mandatory gates before general availability.
 

@@ -6,7 +6,7 @@ Date: 2026-11-09 (America/New_York)
 
 ## Current verified baseline
 
-The single-node Cube development cluster and deployed manager can create, execute, transfer files, and close a session sandbox. A probe inside the deployed runtime Pod exercised all four tools through the manager, then closed the sandbox; CubeAPI showed zero active sandboxes. The runtime server's `SANDBOX_MANAGER_ADDR` is still unset, so browser and App users do not execute Cube tools.
+The single-node Cube development cluster and deployed manager can create, execute, transfer files, and close a session sandbox. A probe inside the deployed runtime Pod exercised all four tools through the manager, then closed the sandbox; CubeAPI showed zero active sandboxes. The runtime deployment now sets `SANDBOX_MANAGER_ADDR` for a bounded development pilot. A disposable tool call from the deployed runtime Pod succeeded and was closed; authenticated browser/App acceptance is still pending.
 
 The v1 session-manager owns `active` and `ended` records and purges transcripts. The backend currently ends the authoritative session first, then asks the in-memory runtime to end on a best-effort basis. Purge also asks the runtime on a best-effort basis before deleting the record. Runtime's v1 destroy callback asks Cube to close, but it cannot ensure delivery after a restart or network failure. The manager recovers live Cube IDs from Cube metadata on startup, but has no durable close intent or periodic comparison with session status. Cube's 30-minute TTL is the last cleanup bound, not a complete lifecycle.
 
