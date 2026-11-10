@@ -22,6 +22,10 @@ OAuth returns to `managedagents://auth/callback`, which must be in Supabase Auth
 
 Run mobile lint, TypeScript, iOS export, and web export. Follow `managed-agents-mobile/doc/ACCEPTANCE.md` on a development build with real accounts and the deployed redirect configuration.
 
+## Session discovery and new conversation
+
+Both clients display the full session ID on the session list and match either the title or ID in search. While searching, they request older paginated session-list results so an ID outside the first page can be found. The web console has a signed-in `/console` homepage with a new-conversation entry, recent sessions, and summary counts. On mobile, New conversation first opens a searchable agent picker; selecting an available agent opens the empty chat. The selected agent ID is used when the first message creates the session.
+
 ## Open questions
 
 The live Supabase redirect allow-list has not been applied or verified in this local implementation. Native OAuth and cross-client data checks require device acceptance.
