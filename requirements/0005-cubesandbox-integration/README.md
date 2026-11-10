@@ -16,12 +16,14 @@ Research and a staged integration of a separate Cube cluster mediated by the pla
 
 - [Two-cluster architecture diagram](two-clusters.png)
 - [Technical design](design.md)
+- [Session lifecycle and web/App plan](lifecycle-and-clients-plan.md)
 - [Delivery plan](delivery.md)
 - [Decisions](decisions.md)
 
 ## Affected repositories
 
 - `agent-runtime`: gRPC tool bridge and session lifecycle calls; no Cube SDK or credentials.
+- `managed-agents-frontend` and `managed-agents-mobile`: shared workspace status and lifecycle UX in web and native clients.
 - `sandbox-manager`: Cube Go SDK adapter, durable session mapping, resource transfer, quotas, and cleanup.
 - `protos`: new session-scoped `sandbox.v3` contract.
 - `managed-agents-design`: this requirement and delivery evidence.
