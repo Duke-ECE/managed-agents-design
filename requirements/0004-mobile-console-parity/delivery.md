@@ -21,6 +21,13 @@ The callback allow-list entry was pushed to backend `feat/api-keys` in
 As of 2026-11-10, backend `main` lacks that entry, and applying the
 redirect to the hosted Auth project has not been verified.
 
+The first signed-in destination is labeled **Overview** on
+[web](https://github.com/Duke-ECE/managed-agents-frontend/commit/3be9fc2) and
+[mobile](https://github.com/Duke-ECE/managed-agents-mobile/commit/1031592).
+Both changes were pushed to `main`. The web push triggers its deployment
+workflow. Mobile is available for Expo preview. Product owner acceptance
+is pending.
+
 ## Verification
 
 Mobile `npm run lint`, `npx tsc --noEmit`, `npx expo export --platform ios`, and `npx expo export --platform web` passed locally with Node 22. A local sample-data browser preview opened sessions and retained a sent message and reply. Real account, administrator, and native device flows remain for the acceptance checklist.
