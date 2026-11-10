@@ -6,6 +6,7 @@ and delivery record. A requirement can span any number of code repositories.
 | ID | Requirement | Status |
 | --- | --- | --- |
 | 0001 | [Durable Context Compaction](0001-durable-context-compaction/README.md) | Draft |
+| 0005 | [CubeSandbox integration](0005-cubesandbox-integration/README.md) | Implementing |
 
 To start a requirement, copy the complete root-level [template/](../template/README.md)
 directory to `requirements/NNNN-descriptive-slug/`, fill in the documents, and add an index row.
