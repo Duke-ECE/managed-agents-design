@@ -7,7 +7,7 @@ Superseded, and link both entries. Editorial corrections may be made in place.
 
 ## D001: Freeze thinking mode at session creation
 
-Status: Accepted
+Status: Superseded by D004 for per-turn cancellation
 
 Date: 2026-11-13
 
@@ -81,3 +81,28 @@ outgoing request. Do not rely on an empty `reasoning_content` placeholder.
 The first production rollout needs coordinated runtime and session-manager
 changes beyond the public mode field. This also protects history quality
 after a restart.
+
+## D004: Allow one-turn thinking cancellation
+
+Status: Accepted
+
+Date: 2026-11-13
+
+### Context
+
+The user wants to stop thinking during a later message without creating a
+new session. The template/session mode remains useful as the default.
+
+### Decision
+
+Keep the durable session mode frozen. Add optional `thinking_mode` to each
+chat request, accepting only `off` as an override. It applies to that turn's
+provider calls, including tool follow-ups, and is not persisted as a new
+session setting. An omitted field uses the frozen mode again. CLI continuation
+accepts `--thinking off`; other values on continuation are rejected.
+
+### Consequences
+
+Clients can turn thinking off for one message and let the next message
+inherit the original mode. This avoids mutating session configuration and
+keeps resume behavior deterministic.

@@ -7,13 +7,15 @@ Created: 2026-11-13
 ## Goal
 
 Let PolyAgent users choose a model's thinking mode once when creating an agent
-template or session, then reuse that choice for every turn in the session.
+template or session, then reuse that choice by default. A later message may
+temporarily turn thinking off.
 
 ## Scope
 
 Add a normalized `thinking_mode` API field, a CLI session-creation flag and
 template setting, frozen session persistence, and DeepSeek Flash request
-mapping. A message request cannot change thinking mode. The first release
+mapping. A message request may disable thinking for that turn without changing
+the stored session mode. The first release
 supports explicit modes only for `deepseek-flash` at `api.deepseek.com`.
 
 ## Documents

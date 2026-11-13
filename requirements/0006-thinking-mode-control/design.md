@@ -7,11 +7,11 @@ Status: Accepted
 DeepSeek Flash enables high-effort thinking by default. PolyAgent currently
 forces it off to reduce time to first visible answer, but users need to choose
 the quality/latency tradeoff. The choice is made at template or session
-creation, never repeated for each message.
+creation, then optionally disable it for one later message.
 
 ## Decisions and alternatives
 
-See [D001 and D002](decisions.md). Session configuration remains immutable.
+See [D001-D004](decisions.md). Session configuration remains immutable.
 
 ## Data model and contracts
 
@@ -27,7 +27,9 @@ template value is nullable so omission remains distinguishable from explicit
 `thinking_mode` alongside `agent_id`; a user-issued API key may specify it
 while still being unable to override the template's LLM triple. The resolved
 mode is returned on session creation and in an owner-scoped safe config read.
-`POST /api/sessions/:id/messages` remains content-only.
+`POST /api/sessions/:id/messages` accepts an optional `thinking_mode: "off"`
+alongside `content`. An omitted field uses the frozen session setting. Any
+other per-message value is rejected with HTTP 400.
 
 The resolved mode is frozen on the durable session record at admission, before
 any chat turn. An additive `session.v1` field carries it through
@@ -51,8 +53,9 @@ read path must redact it.
 ## Execution and recovery
 
 `polyagent chat --agent <id> --thinking <mode> <message>` sets the mode for a
-new session only. `polyagent chat --session <id> <message>` uses the frozen
-mode and rejects `--thinking`. Agent creation JSON accepts `thinking_mode`,
+new session. `polyagent chat --session <id> --thinking off <message>` disables
+thinking for that one turn; an unflagged continuation uses the frozen mode.
+Agent creation JSON accepts `thinking_mode`,
 providing a reusable preference. The web client may omit the field; its
 template form must preserve a value when editing or cloning.
 
