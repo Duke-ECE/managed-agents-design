@@ -16,11 +16,20 @@ Status: In progress
 
 ## Pull requests and versions
 
-Record links and pinned tags as each repository is delivered.
+- `protos` [PR #5](https://github.com/Duke-ECE/protos/pull/5) merged and tagged `v0.9.2`.
+- `session-manager` v1 [draft PR #2](https://github.com/Duke-ECE/session-manager/pull/2), v2 [draft PR #3](https://github.com/Duke-ECE/session-manager/pull/3).
+- `agent-runtime` [draft PR #6](https://github.com/Duke-ECE/agent-runtime/pull/6).
+- `managed-agents-backend` [draft PR #6](https://github.com/Duke-ECE/managed-agents-backend/pull/6).
+- `managed-agents-cli` [draft PR #2](https://github.com/Duke-ECE/managed-agents-cli/pull/2).
+- `managed-agents-frontend` [draft PR #17](https://github.com/Duke-ECE/managed-agents-frontend/pull/17).
 
 ## Verification
 
-Record build/test results and same-prompt live latency/quality evidence here.
+Local gates passed: proto generation/lint/breaking checks; runtime Node 22
+test suite (81 cases); Go build, vet, and test for session-manager, backend,
+and CLI; frontend production build; v2 session-manager migrations on fresh
+and upgraded disposable PostgreSQL databases. Live same-prompt latency and
+quality evidence remains pending.
 
 ## Migration, rollout, and rollback
 
@@ -31,6 +40,11 @@ disabling client controls first; the additive columns and proto fields remain
 safe for older binaries. Preserve DeepSeek Flash's existing `off` default
 throughout rollout.
 
+Production rollout is blocked on D003: persist and privately hydrate full
+reasoning content for thinking-enabled tool calls. The current runtime
+transcript cannot safely resume these sessions after restart.
+
 ## Outcome and deviations
 
-Pending implementation and verification.
+Contract and client plumbing are prepared in draft PRs. Durable reasoning
+recovery, coordinated migrations, and live evaluation remain.

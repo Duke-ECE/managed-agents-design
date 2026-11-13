@@ -43,7 +43,10 @@ For `deepseek-flash` on `api.deepseek.com`, `off` sends
 `thinking: {"type":"enabled"}` plus matching `reasoning_effort`.
 `provider_default` omits both parameters. Explicit `off/low/high/max` on
 other model/endpoints is rejected with HTTP 400 before creating a durable
-record. This release does not stream reasoning content to the client.
+record. This release does not stream reasoning content to the client. Provider
+reasoning needed for tool-call continuity must remain server-private in the
+durable transcript and be restored in message order; the owner transcript
+read path must redact it.
 
 ## Execution and recovery
 
@@ -65,6 +68,8 @@ may set the mode, subject to the existing agent/LLM authorization rules.
   creation, user/API-key authorization, and legacy defaults.
 - Runtime restart before the first chat turn and after a completed turn
   preserves the selected mode; template edits cannot change it.
+- A thinking-enabled tool call survives restart with its full reasoning
+  content in the next provider request, while owner transcript reads omit it.
 - CLI tests cover new-session flags, continued sessions, and invalid modes.
 - Live evaluation compares identical prompts at `off`, `low`, and `high`,
   recording session creation, first visible answer, total latency, and quality.
