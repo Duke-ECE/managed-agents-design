@@ -16,7 +16,8 @@ Status: In progress
 
 ## Pull requests and versions
 
-- `protos` [PR #5](https://github.com/Duke-ECE/protos/pull/5) merged and tagged `v0.9.2`.
+- `protos` [PR #5](https://github.com/Duke-ECE/protos/pull/5) and
+  [PR #6](https://github.com/Duke-ECE/protos/pull/6) merged; latest tag `v0.9.3`.
 - `session-manager` v1 [draft PR #2](https://github.com/Duke-ECE/session-manager/pull/2), v2 [draft PR #3](https://github.com/Duke-ECE/session-manager/pull/3).
 - `agent-runtime` [draft PR #6](https://github.com/Duke-ECE/agent-runtime/pull/6).
 - `managed-agents-backend` [draft PR #6](https://github.com/Duke-ECE/managed-agents-backend/pull/6).
@@ -26,7 +27,7 @@ Status: In progress
 ## Verification
 
 Local gates passed: proto generation/lint/breaking checks; runtime Node 22
-test suite (87 cases); Go build, vet, and test for session-manager, backend,
+test suite (88 cases); Go build, vet, and test for session-manager, backend,
 and CLI; frontend production build; v2 session-manager migrations on fresh
 and upgraded disposable PostgreSQL databases. Live same-prompt latency and
 quality evidence remains pending.
@@ -50,6 +51,11 @@ test verifies a tool call, runtime restart, and replay of `reasoning_content`
 and tool-call IDs. Long histories are read in bounded pages. Production rollout
 still requires coordinated migration/deploy order and live latency/quality
 evaluation.
+
+D004 one-turn cancellation is staged in runtime, backend, and CLI. Tests
+verify `off` applies to a tool follow-up call and an unflagged next message
+returns to the session's saved mode. No session-manager schema change is needed
+for this temporary override.
 
 ## Outcome and deviations
 
