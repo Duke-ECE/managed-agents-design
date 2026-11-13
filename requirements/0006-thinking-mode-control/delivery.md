@@ -33,12 +33,15 @@ quality evidence remains pending.
 
 ## Migration, rollout, and rollback
 
-Apply additive schema changes first. Deploy session-manager and runtime with
-legacy-compatible defaults, then backend, then CLI/frontend. Do not enable
-new client controls until the server path persists the mode. Roll back by
-disabling client controls first; the additive columns and proto fields remain
-safe for older binaries. Preserve DeepSeek Flash's existing `off` default
-throughout rollout.
+Release order: apply the v1 session-manager migration, then deploy
+session-manager with owner redaction, then agent-runtime. Apply the agents
+table migration before deploying the backend. Verify the API directly with
+fresh DeepSeek Flash sessions at `off`, `low`, and `high`, including a tool call
+and restart. Only then release CLI and frontend controls. The v2
+session-manager PR targets its separate durable-context branch and is not
+part of this production sequence. Roll back by disabling client controls
+first; the additive columns and proto fields remain safe for older binaries.
+Preserve DeepSeek Flash's existing `off` default throughout rollout.
 
 D003 recovery is staged in the runtime and both session-manager branches:
 private `agent_state` rows preserve exact provider messages, token-path
