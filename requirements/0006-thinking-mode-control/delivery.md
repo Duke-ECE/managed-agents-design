@@ -26,7 +26,7 @@ Status: In progress
 ## Verification
 
 Local gates passed: proto generation/lint/breaking checks; runtime Node 22
-test suite (81 cases); Go build, vet, and test for session-manager, backend,
+test suite (83 cases); Go build, vet, and test for session-manager, backend,
 and CLI; frontend production build; v2 session-manager migrations on fresh
 and upgraded disposable PostgreSQL databases. Live same-prompt latency and
 quality evidence remains pending.
@@ -40,11 +40,15 @@ disabling client controls first; the additive columns and proto fields remain
 safe for older binaries. Preserve DeepSeek Flash's existing `off` default
 throughout rollout.
 
-Production rollout is blocked on D003: persist and privately hydrate full
-reasoning content for thinking-enabled tool calls. The current runtime
-transcript cannot safely resume these sessions after restart.
+D003 recovery is staged in the runtime and both session-manager branches:
+private `agent_state` rows preserve exact provider messages, token-path
+hydration replays them, and owner reads redact them. A fake-provider replay
+test verifies `reasoning_content` and tool-call IDs. Production rollout still
+requires an integrated restart test, coordinated migration/deploy order, and
+live latency/quality evaluation.
 
 ## Outcome and deviations
 
-Contract and client plumbing are prepared in draft PRs. Durable reasoning
-recovery, coordinated migrations, and live evaluation remain.
+Contract, client plumbing, and private reasoning recovery are prepared in
+draft PRs. Integrated restart verification, coordinated migrations, and live
+evaluation remain.
