@@ -26,7 +26,7 @@ Status: In progress
 ## Verification
 
 Local gates passed: proto generation/lint/breaking checks; runtime Node 22
-test suite (83 cases); Go build, vet, and test for session-manager, backend,
+test suite (87 cases); Go build, vet, and test for session-manager, backend,
 and CLI; frontend production build; v2 session-manager migrations on fresh
 and upgraded disposable PostgreSQL databases. Live same-prompt latency and
 quality evidence remains pending.
@@ -42,13 +42,13 @@ throughout rollout.
 
 D003 recovery is staged in the runtime and both session-manager branches:
 private `agent_state` rows preserve exact provider messages, token-path
-hydration replays them, and owner reads redact them. A fake-provider replay
-test verifies `reasoning_content` and tool-call IDs. Production rollout still
-requires an integrated restart test, coordinated migration/deploy order, and
-live latency/quality evaluation.
+hydration replays them, and owner reads redact them. An integrated fake-provider
+test verifies a tool call, runtime restart, and replay of `reasoning_content`
+and tool-call IDs. Long histories are read in bounded pages. Production rollout
+still requires coordinated migration/deploy order and live latency/quality
+evaluation.
 
 ## Outcome and deviations
 
 Contract, client plumbing, and private reasoning recovery are prepared in
-draft PRs. Integrated restart verification, coordinated migrations, and live
-evaluation remain.
+draft PRs. Coordinated migrations and live evaluation remain.
