@@ -17,6 +17,7 @@ Research and a staged integration of a separate Cube cluster mediated by the pla
 - [Two-cluster architecture diagram](two-clusters.png)
 - [Technical design](design.md)
 - [Session lifecycle and web/App plan](lifecycle-and-clients-plan.md)
+- [Session workspace persistence with Cloudflare R2](session-workspace-r2-plan.md)
 - [Delivery plan](delivery.md)
 - [Decisions](decisions.md)
 

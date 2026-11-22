@@ -87,3 +87,25 @@ This is a testing exception, not a production security posture. Before broader r
 ### Related work
 
 [Delivery plan](delivery.md), [technical design](design.md).
+
+## D005: Persist session files independently of Cube compute
+
+Status: Accepted for feature planning
+
+Date: 2026-11-21
+
+### Context
+
+The product has sessions and agent templates, but no Project entity. The current Cube pilot stores `/workspace` inside a session-bound MicroVM, so timeout or VM loss also loses files. A Project ownership model would require new user-facing controls before the immediate persistence need can be met.
+
+### Decision
+
+Make each session the initial owner of one persistent workspace volume. Use Cloudflare R2 as the S3-compatible backing store for a Cube Volume on the existing Cube host. Keep VM lifecycle and file lifecycle separate: reclaim or replace the VM without deleting the volume; end rejects tools but retains files until the configured retention deadline; purge or retention deletion removes the volume after durable cleanup intent and confirmed detach. Do not add a Project entity in this feature.
+
+### Consequences
+
+An active session can recover its files in a replacement VM. Different sessions do not share files. The manager needs a durable volume binding, quotas, deletion retries, metadata-backup recovery, and an owner-scoped way to export retained files. The direct S3 mount must pass a representative code-workload performance gate before broad rollout. This decision sets ownership and provider choice; it does not approve general user rollout or resolve the open implementation checks.
+
+### Related work
+
+[R2 persistence plan](session-workspace-r2-plan.md), [Cube lifecycle plan](lifecycle-and-clients-plan.md).

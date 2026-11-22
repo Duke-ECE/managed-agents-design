@@ -47,6 +47,8 @@ This enables only a bounded development pilot (`CUBE_MAX_SESSIONS=2`, `CUBE_TTL_
 
 ## Migration, rollout, and rollback
 
+The proposed [session workspace persistence plan](session-workspace-r2-plan.md) adds R2-backed Cube volumes without a Project entity. Its P0-P4 gates are not implemented or verified. D005 records the accepted planning scope only; record repository changes, actual R2/Cube measurements, tests, and rollback evidence here as work proceeds.
+
 Deploy v3 manager behind a disabled flag, then runtime bridge with `NullExecutor` as default. Enable only after cross-cluster verification. Rollback disables the bridge, drains or times out calls, then manager closes remaining bindings. Keep mapping schema and Cube deployment until all bindings/orphans are reconciled. Retire v1/v2 Pod behavior only under a separate reviewed change.
 
 The next implementation sequence, state model, failure handling, web console design, and Expo App design are specified in the [session lifecycle and client experience plan](lifecycle-and-clients-plan.md). This is a plan, not a claim that durable cleanup, client status UI, or user traffic enablement is complete. Its L1-L5 gates remain open before general availability; the current two-sandbox development pilot is recorded above.
