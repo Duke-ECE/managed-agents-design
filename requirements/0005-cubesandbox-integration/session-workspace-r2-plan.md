@@ -1,6 +1,6 @@
 # Provider-Independent Session Workspace Persistence on R2
 
-Status: Proposed implementation plan
+Status: Implementation in progress; see delivery.md for completed work and open gates
 
 Date: 2026-11-21 (America/New_York)
 
@@ -27,7 +27,7 @@ Neither manager proxies archive bytes. Sandbox-manager keeps the bucket-scoped R
 
 Add a `session_workspaces` record owned by session-manager, keyed by `session_id`, containing `user_id`, `state`, `committed_revision`, immutable R2 object key, archive checksum/size, retention deadline, and deletion intent/retry status. Do not cascade it from `agent_sessions`: purge must leave enough information for asynchronous R2 cleanup. Keep service-role-only RLS and expose owner-scoped status through the backend. Never store raw files, commands, or credentials in Postgres.
 
-R2 layout: `sessions/<opaque-session-id>/revisions/<revision-id>.tar.zst`. Upload a new immutable object, verify size and checksum, then atomically advance the committed pointer in session-manager. The pointer is the source of truth; an upload with no committed pointer is garbage-collected after a grace period. Keep prior revisions for a short recovery window and cap total retained bytes. Validate archive paths, symlinks, permissions, file count, and total uncompressed size before extraction. Do not trust an archive solely because it is in the private bucket.
+R2 layout: `sessions/<opaque-session-id>/revisions/<revision-id>.tar.gz`. Upload a new immutable object, verify size and checksum, then atomically advance the committed pointer in session-manager. The pointer is the source of truth; an upload with no committed pointer is garbage-collected after a grace period. Keep prior revisions for a short recovery window and cap total retained bytes. Validate archive paths, symlinks, permissions, file count, and total uncompressed size before extraction. Do not trust an archive solely because it is in the private bucket.
 
 Maintain a separate manager-owned `session_sandbox_bindings` record for the live provider, sandbox ID, lease, expiry, and close retry. A session has at most one writable sandbox and one admitted mutating request at a time. The storage record survives sandbox deletion or manager restart. Cube/AGSX IDs are internal and never used as workspace identifiers.
 
@@ -36,7 +36,7 @@ Maintain a separate manager-owned `session_sandbox_bindings` record for the live
 1. First tool call: validate the user's active session; reserve the sandbox binding; create a provider sandbox with local `/workspace`. No R2 archive exists yet.
 2. Resume: read the committed revision from session-manager; sandbox-manager signs a short-lived GET URL for that exact object. The new sandbox downloads it directly from R2, validates its size, checksum, and archive contents, then extracts it into `/workspace` before accepting tools. A missing or corrupt committed object fails closed; never silently start with empty files.
 3. During a request: tools operate on local disk. On completion of the request's tool/assistant sequence, stop new mutations and create a bounded archive inside the sandbox. Sandbox-manager signs a short-lived PUT URL for a new immutable object key; the sandbox uploads directly to R2. The manager checks the uploaded object's size and checksum via R2 metadata or a trusted digest mechanism, then atomically commits its revision **before** the request is marked durable or a final `done` event is sent. A request with no file changes can reuse the prior revision after reliable change detection; otherwise checkpoint it.
-4. Crash or outage: if a VM dies mid-request, restore the last committed revision in a replacement VM. Mark the in-flight request interrupted; do not replay its shell command automatically. If R2 is unavailable during checkpoint, keep the VM and retry within a bounded deadline. If the VM is subsequently lost, expose that the unfinished request's file changes were not committed.
+4. Crash or outage: if a VM dies mid-request, restore the last committed revision in a replacement VM. Mark the in-flight request interrupted; do not replay its shell command automatically. If R2 is unavailable during checkpoint, destroy the sandbox and report the turn as failed. The next turn restores the last committed revision.
 5. End: reject further tools, checkpoint any completed request, close compute, retain the latest committed archive for owner-scoped export until the session retention deadline. Purge creates a durable deletion intent before deleting the conversation; a janitor removes all session archive objects and retries failures. Align with the deployed session retention policy.
 
 The guarantee is **files from completed requests survive**, not process memory or changes from an interrupted request. External effects of `bash` (for example, a network write) are outside file rollback and are never retried automatically. Tool events and workspace revision commits must share request identity so the transcript cannot claim a file-changing request completed when its checkpoint did not.
