@@ -90,7 +90,7 @@ This is a testing exception, not a production security posture. Before broader r
 
 ## D005: Persist session files independently of Cube compute
 
-Status: Accepted for feature planning
+Status: Superseded by D006 (Cube Volume remains a P0 experiment)
 
 Date: 2026-11-21
 
@@ -109,3 +109,25 @@ An active session can recover its files in a replacement VM. Different sessions 
 ### Related work
 
 [R2 persistence plan](session-workspace-r2-plan.md), [Cube lifecycle plan](lifecycle-and-clients-plan.md).
+
+## D006: Make R2 snapshots independent of the sandbox provider
+
+Status: Proposed
+
+Date: 2026-11-21
+
+### Context
+
+D005's Cube Volume stores files in R2 but uses Cube's volume record and mount protocol to find them. A later move to Tencent Cloud AGSX or another provider could not simply mount the same volume. AGSX currently documents single-file upload/download and recommends packaging directories for transfer.
+
+### Decision
+
+Keep one logical workspace per session. Let session-manager own the workspace's user, lifecycle, committed revision, object reference, and deletion intent. Store provider-independent, versioned workspace archives in R2. Let sandbox-manager own R2 byte transfer and Cube/AGSX sandbox adapters: restore the last committed archive into a new sandbox, then checkpoint the local `/workspace` at the end of each completed request before publishing that request as durable. Do not proxy archive bytes through session-manager or expose R2 credentials to a sandbox.
+
+### Consequences
+
+The canonical files can be restored into either provider using its file-transfer API. Sandbox-local storage is fast but uncommitted changes are lost if a VM crashes mid-request; the last completed checkpoint remains authoritative. Archive size and sync latency must be measured before rollout. The Cube R2 Volume driver stays a disposable feasibility experiment and is not the production source of truth. This proposal needs contract, failure-semantics, and performance review before acceptance.
+
+### Related work
+
+[Provider-independent R2 plan](session-workspace-r2-plan.md), [Tencent AGSX file-transfer documentation](https://cloud.tencent.com/document/product/1814/132410), [D005](#d005-persist-session-files-independently-of-cube-compute).

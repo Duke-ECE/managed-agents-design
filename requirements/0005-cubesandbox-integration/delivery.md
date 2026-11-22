@@ -47,7 +47,7 @@ This enables only a bounded development pilot (`CUBE_MAX_SESSIONS=2`, `CUBE_TTL_
 
 ## Migration, rollout, and rollback
 
-The proposed [session workspace persistence plan](session-workspace-r2-plan.md) adds R2-backed Cube volumes without a Project entity. Its P0-P4 gates are not implemented or verified. D005 records the accepted planning scope only; record repository changes, actual R2/Cube measurements, tests, and rollback evidence here as work proceeds.
+The revised [session workspace persistence plan](session-workspace-r2-plan.md) uses R2 as a provider-independent archive store without a Project entity. D005's Cube Volume approach was retained only as a storage feasibility experiment; D006 proposes session-manager ownership of workspace metadata and sandbox-manager ownership of archive transfer and provider adapters. The revised P0-P4 gates remain open. Record repository changes, actual R2/Cube measurements, tests, and rollback evidence here as work proceeds.
 
 ### R2 P0 partial verification (2026-11-21)
 
