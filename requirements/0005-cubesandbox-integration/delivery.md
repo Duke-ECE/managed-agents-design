@@ -49,6 +49,14 @@ This enables only a bounded development pilot (`CUBE_MAX_SESSIONS=2`, `CUBE_TTL_
 
 The proposed [session workspace persistence plan](session-workspace-r2-plan.md) adds R2-backed Cube volumes without a Project entity. Its P0-P4 gates are not implemented or verified. D005 records the accepted planning scope only; record repository changes, actual R2/Cube measurements, tests, and rollback evidence here as work proceeds.
 
+### R2 P0 partial verification (2026-11-21)
+
+On the existing single-node Cube `v0.7.3` host, MinIO remains enabled and continues to back template artifacts and the CubeOps warehouse. A separate `r2` Volume driver was registered in CubeMaster and Cubelet, using copies of the pinned S3 plugin binary and root-owned mode-`0600` configuration under `/opt/cube-plugins/r2/`. The existing `s3` driver, MinIO settings, and Kubernetes `sandbox-manager` Secret were not changed. The two Cube configuration files were backed up before the driver entries were added. CubeMaster, Cubelet, CubeAPI, and MinIO were active after restart.
+
+The new driver's create/destroy hook succeeded against the private R2 bucket. The Cube `/volumes` API created and deleted a `driver=r2` volume. A disposable volume then passed host-side attach, file write, detach, reattach, and read-back through the `s3fs` plugin. Final cleanup left zero Cube volumes and zero sandboxes. No R2 credential was added to a repository or transcript.
+
+The MicroVM-level gate remains **blocked**: the template ID in the deployed manager manifest is absent, and all five templates currently returned by Cube are `FAILED` (they predate this R2 configuration). The attempted sandbox creation failed with `TemplateNotFoundError`; its disposable volume was deleted. Do not claim that replacement Sandbox remounting or user-facing persistence is verified until a READY template exists and the full create/write/kill/recreate/read test passes. The manager's durable binding, lifecycle, export, and UI stages also remain open.
+
 Deploy v3 manager behind a disabled flag, then runtime bridge with `NullExecutor` as default. Enable only after cross-cluster verification. Rollback disables the bridge, drains or times out calls, then manager closes remaining bindings. Keep mapping schema and Cube deployment until all bindings/orphans are reconciled. Retire v1/v2 Pod behavior only under a separate reviewed change.
 
 The next implementation sequence, state model, failure handling, web console design, and Expo App design are specified in the [session lifecycle and client experience plan](lifecycle-and-clients-plan.md). This is a plan, not a claim that durable cleanup, client status UI, or user traffic enablement is complete. Its L1-L5 gates remain open before general availability; the current two-sandbox development pilot is recorded above.
