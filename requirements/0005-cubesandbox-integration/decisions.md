@@ -122,12 +122,12 @@ D005's Cube Volume stores files in R2 but uses Cube's volume record and mount pr
 
 ### Decision
 
-Keep one logical workspace per session. Let session-manager own the workspace's user, lifecycle, committed revision, object reference, and deletion intent. Store provider-independent, versioned workspace archives in R2. Let sandbox-manager own R2 byte transfer and Cube/AGSX sandbox adapters: restore the last committed archive into a new sandbox, then checkpoint the local `/workspace` at the end of each completed request before publishing that request as durable. Do not proxy archive bytes through session-manager or expose R2 credentials to a sandbox.
+Keep one logical workspace per session. Let session-manager own the workspace's user, lifecycle, committed revision, object reference, and deletion intent. Store provider-independent, versioned workspace archives in R2. Sandbox-manager holds the R2 key only to sign short-lived, object-specific GET/PUT URLs, verify uploaded objects, and control Cube/AGSX sandboxes. Each sandbox transfers archive bytes directly to/from R2 over HTTPS, restores the last committed revision, and checkpoints its local `/workspace` at the end of each completed request before that request is published as durable. Neither manager relays archive bytes; no long-lived R2 key enters a sandbox.
 
 ### Consequences
 
-The canonical files can be restored into either provider using its file-transfer API. Sandbox-local storage is fast but uncommitted changes are lost if a VM crashes mid-request; the last completed checkpoint remains authoritative. Archive size and sync latency must be measured before rollout. The Cube R2 Volume driver stays a disposable feasibility experiment and is not the production source of truth. This proposal needs contract, failure-semantics, and performance review before acceptance.
+The canonical files can be restored into either provider if the selected sandbox network mode permits outbound HTTPS to the R2 S3 endpoint. Presigned URLs are temporary bearer credentials and must be short-lived and object-scoped. Sandbox-local storage is fast but uncommitted changes are lost if a VM crashes mid-request; the last completed checkpoint remains authoritative. Archive size and sync latency must be measured before rollout. The Cube R2 Volume driver stays a disposable feasibility experiment and is not the production source of truth. This proposal needs direct-egress, contract, failure-semantics, and performance review before acceptance.
 
 ### Related work
 
-[Provider-independent R2 plan](session-workspace-r2-plan.md), [Tencent AGSX file-transfer documentation](https://cloud.tencent.com/document/product/1814/132410), [D005](#d005-persist-session-files-independently-of-cube-compute).
+[Provider-independent R2 plan](session-workspace-r2-plan.md), [R2 presigned URLs](https://developers.cloudflare.com/r2/api/s3/presigned-urls/), [Tencent AGSX network modes](https://cloud.tencent.com/document/product/1814/132216), [D005](#d005-persist-session-files-independently-of-cube-compute).
